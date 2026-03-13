@@ -1,7 +1,7 @@
 
 
 import { Request, Response, NextFunction } from "express";
-import { getUser, registerUser } from "../services/auth.service";
+import { getUser, registerUser, loginUser } from "../services/auth.service";
 
 
 interface AuthRequest extends Request{
@@ -45,13 +45,23 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 }
 
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        
+        const user = await loginUser(req.body)
+
+        if(user?.error === "Failed validation") {
+            return res.status(400).json({message: "Invalid request data"})
+        }
+
+        if(user?.error === "Invalid credentials") {
+            return res.status(401).json({message: "Invalid credentials"})
+        }
+
+        res.status(200).json({message: user.message, id: user.id})
+
     } 
-    
     catch (error) {
-        
+        next(error)
     }
 }
 
