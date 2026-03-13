@@ -3,6 +3,7 @@
 
 import express from 'express'
 import authRouter from './routes/auth.routes'
+
 import cors from 'cors'
 
 const app = express()

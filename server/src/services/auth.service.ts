@@ -44,9 +44,6 @@ export const registerUser = async (body: unknown) => {
     if(newUser.length === 0) return {error: "User exists"}
 
     return {user: newUser[0]}
-
-    // GENERATE TOKENS LATER
-
 }
 
 
@@ -72,7 +69,6 @@ export const loginUser = async (body: unknown) => {
     if(!passwordMatch) return {error: "Invalid credentials"}
 
     return {message: "Logged in successfully", id: user.id}
-
-    // GENERATE TOKENS LATER
-
 }
+
+

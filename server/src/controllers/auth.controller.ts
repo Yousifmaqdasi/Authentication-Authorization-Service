@@ -1,7 +1,9 @@
 
-
 import { Request, Response, NextFunction } from "express";
 import { getUser, registerUser, loginUser } from "../services/auth.service";
+import { accessToken } from "../utils/generate.access.token";
+import { refreshToken } from "../utils/generate.refresh.token";
+
 
 
 interface AuthRequest extends Request{
@@ -25,6 +27,7 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction 
 }
 
 
+
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = await registerUser(req.body);
@@ -36,6 +39,11 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         if(user?.error === "User exists") {
             return res.status(409).json({message: "User already exists"})
         }
+
+        if(!user.user) return res.status(500).json({message: "Could not create user"})
+
+        accessToken(res, user.user.id)
+        refreshToken(res, user.user.id)
         
         res.status(201).json(user);
     } 
@@ -57,6 +65,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({message: "Invalid credentials"})
         }
 
+        if(!user.id) return res.status(500).json({message: "Login failed"})
+        
+        accessToken(res, user.id)
+        refreshToken(res, user.id)
+
         res.status(200).json({message: user.message, id: user.id})
 
     } 
@@ -66,18 +79,14 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 }
 
 
-export const logout = async (req: Request, res: Response) => {
-    try {
-        
-    } 
-    
-    catch (error) {
-        
-    }
+export const logout = (req: Request, res: Response) => {
+    // Clear token
+
+    res.status(200).json({message: "Logged out successfully"})
 }
 
 
-export const refreshToken = async (req: Request, res: Response) => {
+export const refresh = async (req: Request, res: Response) => {
     try {
         
     } 
