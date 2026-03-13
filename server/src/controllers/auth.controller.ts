@@ -3,6 +3,8 @@ import { Request, Response, NextFunction } from "express";
 import { getUser, registerUser, loginUser } from "../services/auth.service";
 import { accessToken } from "../utils/generate.access.token";
 import { refreshToken } from "../utils/generate.refresh.token";
+import { clearAccessToken } from "../utils/clear.access.token";
+import { clearRefreshToken } from "../utils/clear.refresh.token";
 
 
 
@@ -22,6 +24,7 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction 
         res.status(200).json(user);
     } 
     catch (error) {
+        console.log(error)
         next(error);
     }
 }
@@ -48,6 +51,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         res.status(201).json(user);
     } 
     catch (error) {
+        console.log(error)
         next(error)
     }
 }
@@ -74,13 +78,15 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     } 
     catch (error) {
+        console.log(error)
         next(error)
     }
 }
 
 
 export const logout = (req: Request, res: Response) => {
-    // Clear token
+    clearAccessToken(res)
+    clearRefreshToken(res)
 
     res.status(200).json({message: "Logged out successfully"})
 }
