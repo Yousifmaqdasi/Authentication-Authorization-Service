@@ -17,70 +17,6 @@ Users can:
 - refresh tokens
 - logout
 
----
-
-# Tech Stack
-
-- Node.js
-- Express
-- PostgreSQL or MongoDB
-- JWT
-- bcrypt
-- dotenv
-
----
-
-# Project Setup
-
-## Initial Setup
-
-- [ ] Create project folder
-- [ ] Initialize Node project
-
-npm init -y
-
-- [ ] Install dependencies
-
-express  
-jsonwebtoken  
-bcrypt  
-dotenv  
-cors  
-
-- [ ] Install dev dependencies
-
-nodemon
-
-- [ ] Create basic server
-
-src/server.js
-
-- [ ] Test server runs
-
----
-
-# Project Structure
-
-Create basic structure.
-
-- [ ] Create folders
-
-src/
-  controllers/
-  routes/
-  middleware/
-  services/
-  models/
-  utils/
-
----
-
-# Database Setup
-
-- [ ] Setup database connection
-
-- [ ] Create users table
-
 Example fields:
 
 id  
@@ -89,10 +25,6 @@ username
 password_hash  
 role  
 created_at  
-
-- [ ] Test inserting a user manually
-
----
 
 # Feature 1: User Registration
 
