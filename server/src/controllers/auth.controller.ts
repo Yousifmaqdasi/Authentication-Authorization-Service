@@ -15,7 +15,7 @@ interface AuthRequest extends Request{
 
 export const getMe = async (req: AuthRequest, res: Response, next: NextFunction ) => {
     try {
-        if(!req.userId) return res.status(401).json({message: "Not Authorized"});
+        if(!req.userId) return res.status(401).json({message: "Unauthorized"});
 
         const user = await getUser(req.userId);
 
@@ -92,12 +92,21 @@ export const logout = (req: Request, res: Response) => {
 }
 
 
-export const refresh = async (req: Request, res: Response) => {
+export const refresh = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
+        const refreshToken = req.cookies.refreshToken
+        if(!refreshToken) return res.status(401).json({message: "Unauthorized"})
         
+        const userId = req.userId
+        if(!userId) return res.status(401).json({ message: "Invalid token payload" });
+
+        accessToken(res, userId)
+
+        res.json({message: "Access token refreshed successfully"})
     } 
     
     catch (error) {
-        
+        console.log("Refresh Token failed:", error)
+        next(error)
     }
 }
