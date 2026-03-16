@@ -6,7 +6,7 @@ import { AuthRequest } from "../types/auth.types"
 export const verifyRefreshToken = (req: AuthRequest, res: Response, next: NextFunction) => {
 
     const refreshToken = req.cookies.refreshToken
-    if(!refreshToken) return res.status(401).json({message: "Unauwthorized! No refresh token provided"})
+    if(!refreshToken) return res.status(401).json({message: "Unauthorized! No refresh token provided"})
 
     const secret = process.env.REFRESH_TOKEN_SECRET
     if(!secret) throw new Error('REFRESH_TOKEN_SECRET is not defined') 

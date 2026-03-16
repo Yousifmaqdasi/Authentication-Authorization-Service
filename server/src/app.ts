@@ -3,6 +3,7 @@
 
 import express from 'express';
 import authRouter from './routes/auth.routes';
+import usersRouter from './routes/users.routes';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { errorHandler } from './middleware/error.handler.middleware';
@@ -21,6 +22,7 @@ app.get('/', (req, res) => {
 
 
 app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter)
 
 
 
@@ -28,6 +30,7 @@ app.use('/api/auth', authRouter);
 app.use((req, res, next) => {
     next({status: 404, message: "Route not found"})
 })
+
 app.use(errorHandler);
 
 
