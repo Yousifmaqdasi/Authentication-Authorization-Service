@@ -88,3 +88,13 @@ export const refresh = async (req: AuthRequest, res: Response, next: NextFunctio
         next(error)
     }
 }
+
+
+export const forgotPassword = async () => {
+    
+}
+
+
+export const resetPassword = async () => {
+
+}

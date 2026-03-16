@@ -1,6 +1,6 @@
 
 import { Router } from "express";
-import { register, login, logout, refresh } from "../controllers/auth.controller";
+import { register, login, logout, refresh, forgotPassword, resetPassword } from "../controllers/auth.controller";
 import { verifyAccessToken } from "../middleware/auth.middleware";
 import { verifyRefreshToken } from "../middleware/refresh.validation.middleware";
 
@@ -10,5 +10,7 @@ authRouter.post('/register', register)
 authRouter.post('/login', login)
 authRouter.post('/logout', verifyAccessToken, logout)
 authRouter.post('/refresh', verifyRefreshToken, refresh)
+authRouter.post('/forgot-password', forgotPassword)
+authRouter.post('/reset-password', resetPassword)
 
 export default authRouter
