@@ -1,25 +1,34 @@
 
 
 
-import express from 'express'
-import authRouter from './routes/auth.routes'
+import express from 'express';
+import authRouter from './routes/auth.routes';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import { errorHandler } from './middleware/error.handler.middleware';
 
-import cors from 'cors'
 
-const app = express()
+const app = express();
 
-app.use(express.json())
+app.use(express.json());
 app.use(cors())
+app.use(cookieParser());
 
 
 app.get('/', (req, res) => {
-    res.json({message: 'Homepage'})
+    res.json({message: 'Homepage'});
 })
 
 
-app.use('/api/auth', authRouter)
+app.use('/api/auth', authRouter);
 
 
+
+
+app.use((req, res, next) => {
+    next({status: 404, message: "Route not found"})
+})
+app.use(errorHandler);
 
 
 export default app

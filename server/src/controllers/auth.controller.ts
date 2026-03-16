@@ -10,16 +10,14 @@ import { AuthRequest } from "../types/auth.types";
 
 export const getMe = async (req: AuthRequest, res: Response, next: NextFunction ) => {
     try {
-        if(!req.userId) return res.status(401).json({message: "Unauthorized"});
-
+        if(!req.userId) return next({status: 401, message: "Unauthorized"})
         const user = await getUser(req.userId);
 
-        if(!user) return res.status(404).json({message: "User was not found"})
+        if(!user) return next({status: 404, message: "User was not found"})
 
         res.status(200).json(user);
     } 
     catch (error) {
-        console.log(error)
         next(error);
     }
 }
@@ -30,14 +28,15 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         const user = await registerUser(req.body);
 
         if(user?.error === "Failed validation") {
-            return res.status(400).json({message: "Invalid request data"})
+            return next({status: 400, message: "Invalid request data"})
+            
         }
 
         if(user?.error === "User exists") {
-            return res.status(409).json({message: "User already exists"})
+            return next({status: 409, message: "User already exists"})
         }
 
-        if(!user.user) return res.status(500).json({message: "Could not create user"})
+        if(!user.user) return next({status: 500, message: "Could not create user"})
 
         accessToken(res, user.user.id)
         refreshToken(res, user.user.id)
@@ -45,7 +44,6 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         res.status(201).json(user);
     } 
     catch (error) {
-        console.log(error)
         next(error)
     }
 }
@@ -56,14 +54,15 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         const user = await loginUser(req.body)
 
         if(user?.error === "Failed validation") {
-            return res.status(400).json({message: "Invalid request data"})
+            
+            return next({status: 400, message: "Invalid request data"})
         }
 
         if(user?.error === "Invalid credentials") {
-            return res.status(401).json({message: "Invalid credentials"})
+            return next({status: 401, message: "Invalid credentials"})
         }
 
-        if(!user.id) return res.status(500).json({message: "Login failed"})
+        if(!user.id) return next({status: 500, message: "Login failed"})
         
         accessToken(res, user.id)
         refreshToken(res, user.id)
@@ -72,7 +71,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     } 
     catch (error) {
-        console.log(error)
         next(error)
     }
 }
