@@ -3,6 +3,8 @@ import { eq } from "drizzle-orm";
 import { db } from "../database";
 import { usersTable } from "../database/schemas/users.schema";
 import bcrypt from 'bcrypt';
+import { resetToken } from "../utils/generate.reset.token";
+import nodemailer from 'nodemailer'
 
 
 export const registerUser = async (email: string, password: string) => {
@@ -49,6 +51,7 @@ export const loginUser = async (email: string, password: string) => {
 export const forgotPasswordService = async (email: string) => {
 
     const userCredentials = await db.select({
+        id: usersTable.id,
         email: usersTable.email
     })
     .from(usersTable)
@@ -57,7 +60,25 @@ export const forgotPasswordService = async (email: string) => {
     const user = userCredentials[0]
     if(!user) return {error: "Invalid credentials"}
 
-    
+    const token = resetToken(user.id)
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'my-email@gmail.com',
+            pass: 'my-email-password'
+        }
+    })
+
+    const mailOptions = {
+        from: 'your-email@gmail.com',
+        to: email,
+        subject: 'Password Reset',
+        text: `Click the following link to reset your password: http://localhost:3000/reset-password/${token}`
+    }
+
+    await transporter.sendMail(mailOptions)
+
 }
 
 

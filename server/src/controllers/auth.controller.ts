@@ -100,9 +100,13 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
         const {email} = validatedResult.data
 
         const result = await forgotPasswordService(email)
+
+        if(result?.error === 'Invalid credentials') return next({status: 401, message: 'Invalid credentials'})
+        
+        return res.status(200).json({message: "Reset email sent"})
     } 
     catch (error) {
-        
+        next(error)
     }
 }
 
