@@ -5,12 +5,7 @@ import { accessToken } from "../utils/generate.access.token";
 import { refreshToken } from "../utils/generate.refresh.token";
 import { clearAccessToken } from "../utils/clear.access.token";
 import { clearRefreshToken } from "../utils/clear.refresh.token";
-
-
-
-interface AuthRequest extends Request{
-    userId?: number;
-}
+import { AuthRequest } from "../types/auth.types";
 
 
 export const getMe = async (req: AuthRequest, res: Response, next: NextFunction ) => {
@@ -28,7 +23,6 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction 
         next(error);
     }
 }
-
 
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
