@@ -26,7 +26,6 @@ app.use('/api/users', usersRouter)
 
 
 
-
 app.use((req, res, next) => {
     next({status: 404, message: "Route not found"})
 })

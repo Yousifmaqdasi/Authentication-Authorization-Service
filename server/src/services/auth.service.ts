@@ -1,25 +1,10 @@
 
-import { eq } from "drizzle-orm"
-import { db} from "../database"
-import { usersTable } from "../database/schemas/users.schema"
+import { eq } from "drizzle-orm";
+import { db } from "../database";
+import { usersTable } from "../database/schemas/users.schema";
 import { validateRegisterForm } from "../validators/register.schema";
 import { validateLoginForm } from "../validators/login.schema";
-import bcrypt from 'bcrypt'
-
-
-export const getUser = async (userId: number) => {
-
-    const user = await db.select({
-        id: usersTable.id,
-        email: usersTable.email
-    })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId))
-
-    if(user.length === 0) return null
-
-    return user[0]
-} 
+import bcrypt from 'bcrypt';
 
 
 export const registerUser = async (body: unknown) => {
