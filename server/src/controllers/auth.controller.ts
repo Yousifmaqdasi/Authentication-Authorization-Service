@@ -56,7 +56,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         accessToken(res, result.id)
         refreshToken(res, result.id)
 
-        res.status(200).json({message: result.message, id: result.id})
+        res.status(200).json({message: "Logged in successfully", id: result.id})
 
     } 
     catch (error) {
@@ -99,11 +99,9 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 
         const {email} = validatedResult.data
 
-        const result = await forgotPasswordService(email)
-
-        if(result?.error === 'Invalid credentials') return next({status: 401, message: 'Invalid credentials'})
+        await forgotPasswordService(email)
         
-        return res.status(200).json({message: "Reset email sent"})
+        return res.status(200).json({message: 'Check your email for password reset instructions'})
     } 
     catch (error) {
         next(error)
@@ -115,8 +113,18 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     try {
         const validatedResult = validateResetPasswordInput(req.body)  
         if(!validatedResult.success) return next({status: 400, message: "Invalid request data"})
+            
+        const { token } = req.params
+        const { password } = validatedResult.data
+
+        if (typeof token !== 'string') {
+        return next({ status: 400, message: 'Invalid token format'})}
+
+        const result = await resetPasswordService(token, password)
+
+        res.status(200).json({ message: "Password reset successful" })
     } 
-    catch (error) {
-        
-    }
+    catch(error) {
+    return next(error)
+  }
 }

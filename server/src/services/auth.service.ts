@@ -4,7 +4,8 @@ import { db } from "../database";
 import { usersTable } from "../database/schemas/users.schema";
 import bcrypt from 'bcrypt';
 import { resetToken } from "../utils/generate.reset.token";
-import nodemailer from 'nodemailer'
+import nodemailer from 'nodemailer';
+import jwt from 'jsonwebtoken';
 
 
 export const registerUser = async (email: string, password: string) => {
@@ -44,7 +45,7 @@ export const loginUser = async (email: string, password: string) => {
     const passwordMatch = await bcrypt.compare(password, user.password)
     if(!passwordMatch) return {error: "Invalid credentials"}
 
-    return {message: "Logged in successfully", id: user.id}
+    return {id: user.id}
 }
 
 
@@ -58,20 +59,22 @@ export const forgotPasswordService = async (email: string) => {
     .where(eq(usersTable.email, email))
 
     const user = userCredentials[0]
-    if(!user) return {error: "Invalid credentials"}
+    if(!user) return 
 
     const token = resetToken(user.id)
 
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'sandbox.smtp.mailtrap.io',
+        port: 587,
+        secure: false, 
         auth: {
-            user: 'my-email@gmail.com',
-            pass: 'my-email-password'
+            user: 'a0c33d396eb514',
+            pass: '9df21a6d528ac7',
         }
-    })
+    });
 
     const mailOptions = {
-        from: 'your-email@gmail.com',
+        from: 'noreply@myapp.com',
         to: email,
         subject: 'Password Reset',
         text: `Click the following link to reset your password: http://localhost:3000/reset-password/${token}`
@@ -82,6 +85,13 @@ export const forgotPasswordService = async (email: string) => {
 }
 
 
-export const resetPasswordService = async (password: string) => {
+export const resetPasswordService = async (token: string, password: string) => {
 
+    const decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET!) as {userId: number}
+    const hashedPassword = await bcrypt.hash(password, 12)
+
+    await db
+    .update(usersTable)
+    .set({password: hashedPassword})
+    .where(eq(usersTable.id, decoded.userId))
 }
