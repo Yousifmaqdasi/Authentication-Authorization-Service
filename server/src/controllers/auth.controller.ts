@@ -6,29 +6,33 @@ import { refreshToken } from "../utils/generate.refresh.token";
 import { clearAccessToken } from "../utils/clear.access.token";
 import { clearRefreshToken } from "../utils/clear.refresh.token";
 import { AuthRequest } from "../types/auth.types";
+import { validateRegisterForm } from "../validators/auth.schema";
+import { validateLoginForm } from "../validators/auth.schema";
+import { validateForgotPasswordInput } from "../validators/auth.schema";
+import { validateResetPasswordInput } from "../validators/auth.schema";
 
 
 
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await registerUser(req.body);
+        const validatedResult = validateRegisterForm(req.body)
+        if(!validatedResult.success) return next({status: 400, message: "Failed validation"})
+        
+        const {email, password} = validatedResult.data
 
-        if(user?.error === "Failed validation") {
-            return next({status: 400, message: "Invalid request data"})
-            
-        }
+        const result = await registerUser(email, password);
 
-        if(user?.error === "User exists") {
+        if(result?.error === "User exists") {
             return next({status: 409, message: "User already exists"})
         }
 
-        if(!user.user) return next({status: 500, message: "Could not create user"})
+        if(!result.user) return next({status: 500, message: "Could not create user"})
 
-        accessToken(res, user.user.id)
-        refreshToken(res, user.user.id)
+        accessToken(res, result.user.id)
+        refreshToken(res, result.user.id)
         
-        res.status(201).json(user);
+        res.status(201).json(result.user);
     } 
     catch (error) {
         next(error)
@@ -38,23 +42,25 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await loginUser(req.body)
+        
+        const validatedResult = validateLoginForm(req.body)
+        if(!validatedResult.success) return next({status: 400, message: "Invalid request data"})
 
-        if(user?.error === "Failed validation") {
-            
-            return next({status: 400, message: "Invalid request data"})
-        }
+        const {email, password} = validatedResult.data
 
-        if(user?.error === "Invalid credentials") {
+        const result = await loginUser(email, password)
+
+
+        if(result?.error === "Invalid credentials") {
             return next({status: 401, message: "Invalid credentials"})
         }
 
-        if(!user.id) return next({status: 500, message: "Login failed"})
+        if(!result.id) return next({status: 500, message: "Login failed"})
         
-        accessToken(res, user.id)
-        refreshToken(res, user.id)
+        accessToken(res, result.id)
+        refreshToken(res, result.id)
 
-        res.status(200).json({message: user.message, id: user.id})
+        res.status(200).json({message: result.message, id: result.id})
 
     } 
     catch (error) {
@@ -90,8 +96,13 @@ export const refresh = async (req: AuthRequest, res: Response, next: NextFunctio
 }
 
 
-export const forgotPassword = async () => {
-    
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const validatedResult = validateForgotPasswordInput(req.body) 
+    } 
+    catch (error) {
+        
+    }
 }
 
 

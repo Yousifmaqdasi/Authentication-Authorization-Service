@@ -2,22 +2,16 @@
 import { eq } from "drizzle-orm";
 import { db } from "../database";
 import { usersTable } from "../database/schemas/users.schema";
-import { validateRegisterForm } from "../validators/register.schema";
-import { validateLoginForm } from "../validators/login.schema";
 import bcrypt from 'bcrypt';
 
 
-export const registerUser = async (body: unknown) => {
+export const registerUser = async (email: string, password: string) => {
 
-    const validatedResult = validateRegisterForm(body)
-    if(!validatedResult.success) return {error: "Failed validation"}
-
-    const {email, password} = validatedResult.data
     const hashedPassword = await bcrypt.hash(password, 12)
 
     const newUser = await db.insert(usersTable)
     .values({
-        email: email, 
+        email: email,
         password: hashedPassword
     })
     .onConflictDoNothing({target: usersTable.email})
@@ -32,12 +26,7 @@ export const registerUser = async (body: unknown) => {
 }
 
 
-export const loginUser = async (body: unknown) => {
-
-    const validatedResult = validateLoginForm(body)
-    if(!validatedResult.success) return {error: "Failed validation"}
-
-    const {email, password} = validatedResult.data
+export const loginUser = async (email: string, password: string) => {
 
     const userCredentials = await db.select({
         id: usersTable.id,
@@ -57,3 +46,6 @@ export const loginUser = async (body: unknown) => {
 }
 
 
+export const forgotPassword = async (email: string) => {
+    
+}
