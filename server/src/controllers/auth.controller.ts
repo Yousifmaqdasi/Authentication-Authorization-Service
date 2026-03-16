@@ -1,6 +1,6 @@
 
 import { Request, Response, NextFunction } from "express";
-import { registerUser, loginUser } from "../services/auth.service";
+import { registerUser, loginUser, forgotPasswordService, resetPasswordService } from "../services/auth.service";
 import { accessToken } from "../utils/generate.access.token";
 import { refreshToken } from "../utils/generate.refresh.token";
 import { clearAccessToken } from "../utils/clear.access.token";
@@ -10,8 +10,6 @@ import { validateRegisterForm } from "../validators/auth.schema";
 import { validateLoginForm } from "../validators/auth.schema";
 import { validateForgotPasswordInput } from "../validators/auth.schema";
 import { validateResetPasswordInput } from "../validators/auth.schema";
-
-
 
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -42,14 +40,12 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        
         const validatedResult = validateLoginForm(req.body)
         if(!validatedResult.success) return next({status: 400, message: "Invalid request data"})
 
         const {email, password} = validatedResult.data
 
         const result = await loginUser(email, password)
-
 
         if(result?.error === "Invalid credentials") {
             return next({status: 401, message: "Invalid credentials"})
@@ -99,6 +95,11 @@ export const refresh = async (req: AuthRequest, res: Response, next: NextFunctio
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const validatedResult = validateForgotPasswordInput(req.body) 
+        if(!validatedResult.success) return next({status: 400, message: "Invalid request data"})
+
+        const {email} = validatedResult.data
+
+        const result = await forgotPasswordService(email)
     } 
     catch (error) {
         
@@ -106,6 +107,12 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 }
 
 
-export const resetPassword = async () => {
-
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const validatedResult = validateResetPasswordInput(req.body)  
+        if(!validatedResult.success) return next({status: 400, message: "Invalid request data"})
+    } 
+    catch (error) {
+        
+    }
 }

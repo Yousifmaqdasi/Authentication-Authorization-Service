@@ -46,6 +46,21 @@ export const loginUser = async (email: string, password: string) => {
 }
 
 
-export const forgotPassword = async (email: string) => {
+export const forgotPasswordService = async (email: string) => {
+
+    const userCredentials = await db.select({
+        email: usersTable.email
+    })
+    .from(usersTable)
+    .where(eq(usersTable.email, email))
+
+    const user = userCredentials[0]
+    if(!user) return {error: "Invalid credentials"}
+
     
+}
+
+
+export const resetPasswordService = async (password: string) => {
+
 }
