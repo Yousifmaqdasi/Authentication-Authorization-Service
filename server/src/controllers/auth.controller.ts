@@ -1,6 +1,6 @@
 
 import { Request, Response, NextFunction } from "express";
-import { getUser, registerUser, loginUser } from "../services/auth.service";
+import { registerUser, loginUser } from "../services/auth.service";
 import { accessToken } from "../utils/generate.access.token";
 import { refreshToken } from "../utils/generate.refresh.token";
 import { clearAccessToken } from "../utils/clear.access.token";
@@ -8,19 +8,6 @@ import { clearRefreshToken } from "../utils/clear.refresh.token";
 import { AuthRequest } from "../types/auth.types";
 
 
-export const getMe = async (req: AuthRequest, res: Response, next: NextFunction ) => {
-    try {
-        if(!req.userId) return next({status: 401, message: "Unauthorized"})
-        const user = await getUser(req.userId);
-
-        if(!user) return next({status: 404, message: "User was not found"})
-
-        res.status(200).json(user);
-    } 
-    catch (error) {
-        next(error);
-    }
-}
 
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
