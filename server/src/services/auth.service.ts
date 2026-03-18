@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import { resetToken } from "../utils/generate.reset.token";
 import nodemailer from 'nodemailer';
 import jwt from 'jsonwebtoken';
+import { resetTokenTable } from "../database/schemas/tokens.schema";
 
 
 export const registerUser = async (email: string, password: string) => {
@@ -62,6 +63,14 @@ export const forgotPasswordService = async (email: string) => {
     if(!user) return 
 
     const token = resetToken(user.id)
+    const hashedToken = await bcrypt.hash(token, 12)
+
+    const insertTokenInDb = await db.insert(resetTokenTable)
+    .values({
+        user_id: user.id,
+        hashed_token: hashedToken,
+        expires_at: new Date(Date.now() + 15 * 60 * 1000)
+    })
 
     const transporter = nodemailer.createTransport({
         host: 'sandbox.smtp.mailtrap.io',
@@ -77,7 +86,7 @@ export const forgotPasswordService = async (email: string) => {
         from: 'noreply@myapp.com',
         to: email,
         subject: 'Password Reset',
-        text: `Click the following link to reset your password: http://localhost:3000/reset-password/${token}`
+        text: `Click the following link to reset your password: https://yourfrontend.com/reset-password/${token}`
     }
 
     await transporter.sendMail(mailOptions)

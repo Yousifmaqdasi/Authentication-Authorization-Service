@@ -120,7 +120,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         if (typeof token !== 'string') {
         return next({ status: 400, message: 'Invalid token format'})}
 
-        const result = await resetPasswordService(token, password)
+        await resetPasswordService(token, password)
 
         res.status(200).json({ message: "Password reset successful" })
     } 
