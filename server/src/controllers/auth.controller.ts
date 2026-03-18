@@ -98,7 +98,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
         if(!validatedResult.success) return next({status: 400, message: "Invalid request data"})
 
         const {email} = validatedResult.data
-
+        
         await forgotPasswordService(email)
         
         return res.status(200).json({message: 'Check your email for password reset instructions'})
@@ -120,7 +120,11 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         if (typeof token !== 'string') {
         return next({ status: 400, message: 'Invalid token format'})}
 
-        await resetPasswordService(token, password)
+        const result = await resetPasswordService(token, password)
+
+        if (result?.error) {
+            return res.status(400).json({message: result.error})
+        }
 
         res.status(200).json({ message: "Password reset successful" })
     } 

@@ -61,7 +61,10 @@ export const forgotPasswordService = async (email: string) => {
 
     const user = userCredentials[0]
     if(!user) return 
-
+    
+    await db.delete(resetTokenTable)
+    .where(eq(resetTokenTable.user_id, user.id))
+    
     const token = resetToken(user.id)
     const hashedToken = await bcrypt.hash(token, 12)
 
@@ -96,11 +99,40 @@ export const forgotPasswordService = async (email: string) => {
 
 export const resetPasswordService = async (token: string, password: string) => {
 
-    const decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET!) as {userId: number}
+    let decoded: {userId: number}
+
+    try {
+        decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET!) as {userId: number}
+    } 
+    catch (error) {
+        return { error: "Invalid token" }
+    }
+
+    const userId = decoded.userId
+
+    const tokens = await db.select({
+        userId: resetTokenTable.user_id,
+        hashedToken: resetTokenTable.hashed_token,
+        expiresAt: resetTokenTable.expires_at
+    })
+    .from(resetTokenTable)
+    .where(eq(resetTokenTable.user_id, userId))
+
+    if(tokens.length === 0) return { error: "Invalid token" }
+
+    if(tokens[0].expiresAt < new Date()) return { error: "Invalid token" }
+
+    const isMatch = await bcrypt.compare(token, tokens[0].hashedToken)
+    if(!isMatch) return { error: "Invalid token" }
+
     const hashedPassword = await bcrypt.hash(password, 12)
 
     await db
     .update(usersTable)
     .set({password: hashedPassword})
     .where(eq(usersTable.id, decoded.userId))
+
+    await db
+    .delete(resetTokenTable)
+    .where(eq(resetTokenTable.user_id, userId))
 }
