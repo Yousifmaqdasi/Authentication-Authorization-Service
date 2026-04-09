@@ -1,7 +1,7 @@
 
 import { AuthRequest } from "../types/auth.types";
 import { Response, NextFunction } from "express";
-import { getUser, deleteUser } from "../services/user.service";
+import { getMe as getMeService , deleteMe as deleteMeService  } from "../services/user.service";
 import { clearAccessToken } from "../utils/clear.access.token";
 import { clearRefreshToken } from "../utils/clear.refresh.token";
 
@@ -11,7 +11,7 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction)
     try {
         if(!req.userId) return next({status: 401, message: "Unauthorized"})
 
-        const user = await getUser(req.userId);
+        const user = await getMeService(req.userId);
         if(!user) return next({status: 404, message: "User was not found"})
 
         res.status(200).json(user);
@@ -26,7 +26,7 @@ export const deleteMe = async (req: AuthRequest, res: Response, next: NextFuncti
     try {
         if(!req.userId) return next({status: 401, message: "Unauthorized"})
 
-        const user = await deleteUser(req.userId)
+        const user = await deleteMeService(req.userId)
         if(!user) return next({status: 404, message: "User was not found"})
 
         clearAccessToken(res)
@@ -36,5 +36,15 @@ export const deleteMe = async (req: AuthRequest, res: Response, next: NextFuncti
     } 
     catch (error) {
         next(error)
+    }
+}
+
+
+export const getUsers = async () => {
+    try {
+        
+    } 
+    catch (error) {
+        
     }
 }

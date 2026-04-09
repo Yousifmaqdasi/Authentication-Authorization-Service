@@ -36,6 +36,13 @@
       "when": 1773827706400,
       "tag": "0004_green_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775765595671,
+      "tag": "0005_slippery_klaw",
+      "breakpoints": true
     }
   ]
 }

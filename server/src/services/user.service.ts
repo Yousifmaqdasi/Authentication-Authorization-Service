@@ -4,7 +4,7 @@ import { db } from "../database";
 import { usersTable } from "../database/schemas/users.schema";
 
 
-export const getUser = async (userId: number) => {
+export const getMe = async (userId: number) => {
 
     const user = await db.select({
         id: usersTable.id,
@@ -19,7 +19,7 @@ export const getUser = async (userId: number) => {
 } 
 
 
-export const deleteUser = async (userId: number) => {
+export const deleteMe = async (userId: number) => {
 
     const user = await db
     .delete(usersTable)
@@ -30,3 +30,11 @@ export const deleteUser = async (userId: number) => {
 
     return user[0]
 }
+
+
+// export const getUsers = () => {
+
+//     const users = await db.select({
+
+//     })
+// }

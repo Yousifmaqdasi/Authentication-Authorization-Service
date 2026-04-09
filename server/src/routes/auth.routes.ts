@@ -19,7 +19,7 @@ authRouter.post('/login', login)
 authRouter.post('/logout', verifyAccessToken, logout)
 authRouter.post('/refresh', verifyRefreshToken, refresh)
 authRouter.post('/forgot-password', forgotPassword)
-authRouter.post('/reset-password/:token', resetPassword)
+authRouter.post('/reset-password/:userId/:token', resetPassword)
 
 
 export default authRouter

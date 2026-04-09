@@ -114,13 +114,15 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         const validatedResult = validateResetPasswordInput(req.body)  
         if(!validatedResult.success) return next({status: 400, message: "Invalid request data"})
             
-        const { token } = req.params
+        const { userId, token } = req.params as {userId: string, token: string}
+
+        if (!userId || !token) {
+            return next({ status: 400, message: "Invalid request" })
+        }
+
         const { password } = validatedResult.data
 
-        if (typeof token !== 'string') {
-        return next({ status: 400, message: 'Invalid token format'})}
-
-        const result = await resetPasswordService(token, password)
+        const result = await resetPasswordService(Number(userId), token, password)
 
         if (result?.error) {
             return res.status(400).json({message: result.error})
