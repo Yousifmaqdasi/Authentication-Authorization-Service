@@ -1,4 +1,3 @@
-
 import { pgTable, integer, text, timestamp } from 'drizzle-orm/pg-core'
 import { usersTable } from './users.schema'
 

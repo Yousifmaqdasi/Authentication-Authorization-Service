@@ -1,4 +1,3 @@
-
 import { Response } from "express"
 
 export const clearRefreshToken = (res: Response) => {

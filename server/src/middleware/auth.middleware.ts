@@ -1,4 +1,3 @@
-
 import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
 import { AuthRequest } from '../types/auth.types'

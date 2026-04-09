@@ -1,9 +1,12 @@
-
 import { AuthRequest } from "../types/auth.types";
-import { Response, NextFunction } from "express";
-import { getMe as getMeService , deleteMe as deleteMeService  } from "../services/user.service";
+import { Request, Response, NextFunction} from "express";
 import { clearAccessToken } from "../utils/clear.access.token";
 import { clearRefreshToken } from "../utils/clear.refresh.token";
+import {
+    getMe as getMeService , 
+    deleteMe as deleteMeService, 
+    getUsers as getUsersService} 
+from "../services/user.service";
 
 
 
@@ -40,9 +43,10 @@ export const deleteMe = async (req: AuthRequest, res: Response, next: NextFuncti
 }
 
 
-export const getUsers = async () => {
+export const getUsers = async (req: Request, res: Response) => {
     try {
-        
+        const users = await getUsersService()
+        res.json(users)
     } 
     catch (error) {
         

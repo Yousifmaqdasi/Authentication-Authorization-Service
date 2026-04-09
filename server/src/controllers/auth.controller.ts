@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction } from "express";
 import { registerUser, loginUser, forgotPasswordService, resetPasswordService } from "../services/auth.service";
 import { accessToken } from "../utils/generate.access.token";

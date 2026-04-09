@@ -1,4 +1,3 @@
-
 import { eq } from "drizzle-orm";
 import { db } from "../database";
 import { usersTable } from "../database/schemas/users.schema";
@@ -33,9 +32,14 @@ export const deleteMe = async (userId: number) => {
 }
 
 
-// export const getUsers = () => {
+export const getUsers = async () => {
 
-//     const users = await db.select({
+    const users = await db.select({
+        id: usersTable.id,
+        name: usersTable.name,
+        email: usersTable.email
+    })
+    .from(usersTable)
 
-//     })
-// }
+    return users
+}

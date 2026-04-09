@@ -1,4 +1,3 @@
-
 import { eq } from "drizzle-orm";
 import { db } from "../database";
 import { usersTable } from "../database/schemas/users.schema";
