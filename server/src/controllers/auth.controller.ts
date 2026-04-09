@@ -17,9 +17,9 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         const validatedResult = validateRegisterForm(req.body)
         if(!validatedResult.success) return next({status: 400, message: "Failed validation"})
         
-        const {email, password} = validatedResult.data
+        const {name, email, password} = validatedResult.data
 
-        const result = await registerUser(email, password);
+        const result = await registerUser(name, email, password);
 
         if(result?.error === "User exists") {
             return next({status: 409, message: "User already exists"})

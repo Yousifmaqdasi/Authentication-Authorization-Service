@@ -8,6 +8,7 @@ export const getMe = async (userId: number) => {
 
     const user = await db.select({
         id: usersTable.id,
+        name: usersTable.name,
         email: usersTable.email
     })
     .from(usersTable)

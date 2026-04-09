@@ -2,6 +2,12 @@
 import z from 'zod'
 
 const registerSchema = z.object({
+    name: z
+    .string()
+    .trim()
+    .min(2, 'Minimum 2 characters')
+    .max(255, 'Maximum 255 characters are allowed'),
+
     email: z
     .email()
     .trim(),

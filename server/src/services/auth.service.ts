@@ -8,18 +8,20 @@ import { resetTokenTable } from "../database/schemas/tokens.schema";
 import crypto from 'crypto'
 
 
-export const registerUser = async (email: string, password: string) => {
+export const registerUser = async (name: string, email: string, password: string) => {
 
     const hashedPassword = await bcrypt.hash(password, 12)
 
     const newUser = await db.insert(usersTable)
     .values({
         email: email,
+        name: name,
         password: hashedPassword
     })
     .onConflictDoNothing({target: usersTable.email})
     .returning({
         id: usersTable.id,
+        name: usersTable.name,
         email: usersTable.email
     })
 
