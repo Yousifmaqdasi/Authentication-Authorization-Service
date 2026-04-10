@@ -43,6 +43,13 @@
       "when": 1775765595671,
       "tag": "0005_slippery_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1775828289677,
+      "tag": "0006_nosy_nico_minoru",
+      "breakpoints": true
     }
   ]
 }

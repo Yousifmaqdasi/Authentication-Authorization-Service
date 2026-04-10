@@ -4,7 +4,7 @@ export const roles: Roles = {
   admin: {
     can: ['create', 'edit', 'delete', 'view'],
   },
-  editor: {
+  user: {
     can: ['create', 'edit', 'view'],
   },
   viewer: {

@@ -43,12 +43,12 @@ export const deleteMe = async (req: AuthRequest, res: Response, next: NextFuncti
 }
 
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const users = await getUsersService()
         res.json(users)
     } 
     catch (error) {
-        
+        next(error)
     }
 }

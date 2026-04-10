@@ -4,7 +4,7 @@ import { verifyAccessToken } from "../middleware/auth.middleware";
 
 const usersRouter = Router()
 
-usersRouter.get('/', getUsers)
+usersRouter.get('/', verifyAccessToken, getUsers)
 usersRouter.get('/me', verifyAccessToken, getMe)
 usersRouter.delete('/me', verifyAccessToken, deleteMe)
 

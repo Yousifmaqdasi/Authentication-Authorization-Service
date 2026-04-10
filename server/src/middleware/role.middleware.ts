@@ -1,12 +1,15 @@
 import { Response, NextFunction } from "express"
-import { RoleRequest } from "../types/role.types"
 import { roles } from "../utils/roles"
 import type { Roles } from "../types/role.types"
+import { AuthRequest } from "../types/auth.types"
 
-const checkRole = (role: string, action: string) => {
-    return (req: RoleRequest, res: Response, next: NextFunction) => {
-        const userRole = req.user.role
+export const checkRoleMiddleware = (action: string) => {
+    return (req: AuthRequest, res: Response, next: NextFunction) => {
+        const userRole = req.user?.role
+        if(!userRole) return res.status(403).json({ message: "Access Denied" })
+
         const permissions = roles[userRole as keyof Roles].can
+        if (!permissions) return res.status(403).json({ message: "Access Denied" })
 
         if (permissions.includes(action)) {
             next()
@@ -16,3 +19,4 @@ const checkRole = (role: string, action: string) => {
         }
     }
 }
+
