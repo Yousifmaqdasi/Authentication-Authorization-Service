@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { registerUser, loginUser, forgotPasswordService, resetPasswordService } from "../services/auth.service";
+import { 
+    registerUser, 
+    loginUser, 
+    forgotPassword as forgotPasswordService, 
+    resetPassword as resetPasswordService, 
+    refresh as refreshService } 
+from "../services/auth.service";
 import { accessToken } from "../utils/generate.access.token";
 import { refreshToken } from "../utils/generate.refresh.token";
 import { clearAccessToken } from "../utils/clear.access.token";
@@ -10,9 +16,7 @@ import { validateLoginForm } from "../validators/auth.schema";
 import { validateForgotPasswordInput } from "../validators/auth.schema";
 import { validateResetPasswordInput } from "../validators/auth.schema";
 import jwt from 'jsonwebtoken'
-import { usersTable } from "../database/schemas/users.schema";
-import { db } from "../database";
-import { eq } from "drizzle-orm";
+
 
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -89,15 +93,15 @@ export const refresh = async (req: AuthRequest, res: Response, next: NextFunctio
         const userId = decoded.userId
         if (!userId) return next({ status: 401, message: "Invalid token" })
 
-        const userInfo = await db
-        .select({id: usersTable.id, role: usersTable.role})
-        .from(usersTable)
-        .where(eq(usersTable.id, userId))
+        const result = await refreshService(userId)
 
-        const user = userInfo[0]
-        if(!user) return res.status(404).json( {message: "User not found" } )
+        if (result.error) return next({ status: 401, message: "Invalid token" })
 
-        accessToken(res, user.id, user.role)
+        if (!result.id || !result.role) {
+            return next({ status: 404, message: "User not found" })
+        }
+
+        accessToken(res, result.id, result.role)
 
         res.json({message: "Access token refreshed successfully"})
     } 

@@ -52,7 +52,23 @@ export const loginUser = async (email: string, password: string) => {
 }
 
 
-export const forgotPasswordService = async (email: string) => {
+export const refresh = async (userId: number) => {
+
+    const userInfo = await db.select({
+        id: usersTable.id, 
+        role: usersTable.role
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    
+    const user = userInfo[0]
+    if(!user) return {error: "User not found"}
+    
+    return {id: user.id, role: user.role}
+}
+
+
+export const forgotPassword = async (email: string) => {
 
     const userCredentials = await db.select({
         id: usersTable.id,
@@ -106,7 +122,7 @@ export const forgotPasswordService = async (email: string) => {
 }
 
 
-export const resetPasswordService = async (userId: number, token: string, password: string) => {
+export const resetPassword = async (userId: number, token: string, password: string) => {
 
     const tokens = await db.select({
         userId: resetTokenTable.user_id,
@@ -134,3 +150,4 @@ export const resetPasswordService = async (userId: number, token: string, passwo
     .delete(resetTokenTable)
     .where(eq(resetTokenTable.user_id, userId))
 }
+
