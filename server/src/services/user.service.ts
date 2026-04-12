@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { db } from "../database";
-import { usersTable } from "../database/schemas/users.schema";
+import { db } from "../config/db";
+import { usersTable } from "../models/users.schema";
 
 
 export const getMe = async (userId: number) => {

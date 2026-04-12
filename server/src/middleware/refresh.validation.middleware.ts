@@ -12,9 +12,14 @@ export const verifyRefreshToken = (req: AuthRequest, res: Response, next: NextFu
 
     try {
         const decodedToken = jwt.verify(refreshToken, secret) as {userId: number}
-        const userId = decodedToken.userId
 
-        req.userId = userId
+        const userId = decodedToken.userId
+        if(!userId) return 
+
+        if(!req.user) return res.status(401).json({message: "Unauthorized"})
+        
+        req.user.id = userId
+
         next()
     } 
     catch (error) {

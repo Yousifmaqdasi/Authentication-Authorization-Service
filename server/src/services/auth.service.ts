@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
-import { db } from "../database";
-import { usersTable } from "../database/schemas/users.schema";
+import { db } from "../config/db";
+import { usersTable } from "../models/users.schema";
 import bcrypt from 'bcrypt';
 import nodemailer from 'nodemailer';
-import { resetTokenTable } from "../database/schemas/tokens.schema";
+import { resetTokenTable } from "../models/tokens.schema";
 import crypto from 'crypto'
 
 

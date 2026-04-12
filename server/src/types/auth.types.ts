@@ -7,7 +7,3 @@ export interface AuthRequest extends Request{
   }
 }
 
-export type Roles = {
-  admin: {can: string[]}
-  user: {can: string[]}
-}
