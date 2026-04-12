@@ -21,7 +21,8 @@ export const registerUser = async (name: string, email: string, password: string
     .returning({
         id: usersTable.id,
         name: usersTable.name,
-        email: usersTable.email
+        email: usersTable.email,
+        role: usersTable.role
     })
 
     if(newUser.length === 0) return {error: "User exists"}
@@ -35,7 +36,8 @@ export const loginUser = async (email: string, password: string) => {
     const userCredentials = await db.select({
         id: usersTable.id,
         email: usersTable.email,
-        password: usersTable.password
+        password: usersTable.password,
+        role: usersTable.role
     })
     .from(usersTable)
     .where(eq(usersTable.email, email))
@@ -46,7 +48,7 @@ export const loginUser = async (email: string, password: string) => {
     const passwordMatch = await bcrypt.compare(password, user.password)
     if(!passwordMatch) return {error: "Invalid credentials"}
 
-    return {id: user.id}
+    return {id: user.id, role: user.role}
 }
 
 

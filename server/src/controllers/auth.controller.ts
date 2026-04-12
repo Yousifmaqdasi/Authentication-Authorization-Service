@@ -9,6 +9,10 @@ import { validateRegisterForm } from "../validators/auth.schema";
 import { validateLoginForm } from "../validators/auth.schema";
 import { validateForgotPasswordInput } from "../validators/auth.schema";
 import { validateResetPasswordInput } from "../validators/auth.schema";
+import jwt from 'jsonwebtoken'
+import { usersTable } from "../database/schemas/users.schema";
+import { db } from "../database";
+import { eq } from "drizzle-orm";
 
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -20,13 +24,13 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
         const result = await registerUser(name, email, password);
 
-        if(result?.error === "User exists") {
-            return next({status: 409, message: "User already exists"})
-        }
+        if(result?.error === "User exists") return next({status: 409, message: "User already exists"})
 
         if(!result.user) return next({status: 500, message: "Could not create user"})
 
-        accessToken(res, result.user.id)
+        const userRole = result.user?.role
+
+        accessToken(res, result.user.id, userRole)
         refreshToken(res, result.user.id)
         
         res.status(201).json(result.user);
@@ -46,13 +50,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
         const result = await loginUser(email, password)
 
-        if(result?.error === "Invalid credentials") {
-            return next({status: 401, message: "Invalid credentials"})
-        }
+        if(result?.error === "Invalid credentials") return next({status: 401, message: "Invalid credentials"})
 
         if(!result.id) return next({status: 500, message: "Login failed"})
         
-        accessToken(res, result.id)
+        const userRole = result.role
+        
+        accessToken(res, result.id, userRole)
         refreshToken(res, result.id)
 
         res.status(200).json({message: "Logged in successfully", id: result.id})
@@ -76,11 +80,24 @@ export const refresh = async (req: AuthRequest, res: Response, next: NextFunctio
     try {
         const refreshToken = req.cookies.refreshToken
         if(!refreshToken) return next({status: 401, message: "Unauthorized"})
-        
-        const userId = req.userId
-        if(!userId) return next({status: 401, message: "Invalid token payload"})
 
-        accessToken(res, userId)
+        const secret = process.env.REFRESH_TOKEN_SECRET
+        if (!secret) throw new Error("REFRESH_TOKEN_SECRET is not defined")
+
+        const decoded = jwt.verify(refreshToken, secret) as { userId: number }
+
+        const userId = decoded.userId
+        if (!userId) return next({ status: 401, message: "Invalid token" })
+
+        const userInfo = await db
+        .select({id: usersTable.id, role: usersTable.role})
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+
+        const user = userInfo[0]
+        if(!user) return res.status(404).json( {message: "User not found" } )
+
+        accessToken(res, user.id, user.role)
 
         res.json({message: "Access token refreshed successfully"})
     } 

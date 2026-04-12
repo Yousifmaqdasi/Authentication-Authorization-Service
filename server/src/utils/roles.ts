@@ -1,4 +1,4 @@
-import { Roles } from "../types/role.types";
+import { Roles } from "../types/auth.types";
 
 export const roles: Roles = {
   admin: {
@@ -6,8 +6,5 @@ export const roles: Roles = {
   },
   user: {
     can: ['create', 'edit', 'view'],
-  },
-  viewer: {
-    can: ['view'],
-  },
+  }
 };

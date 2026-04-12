@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken'
 import { Response, NextFunction } from 'express'
 import { AuthRequest } from '../types/auth.types'
 
-
 export const verifyAccessToken = (req: AuthRequest, res: Response, next: NextFunction) => {
 
     const token = req.cookies.accessToken
@@ -12,10 +11,13 @@ export const verifyAccessToken = (req: AuthRequest, res: Response, next: NextFun
     if(!secret) throw new Error('ACCESS_TOKEN_SECRET is not defined') 
 
     try {
-        const decodedToken = jwt.verify(token, secret) as {userId: number}
-        const userId = decodedToken.userId
+        const decodedToken = jwt.verify(token, secret) as {id: number, role: string}
 
-        req.userId = userId
+        const userId = decodedToken.id
+        const userRole = decodedToken.role
+
+        req.user = {id: userId, role: userRole}
+
         next()
     } 
     catch (error) {

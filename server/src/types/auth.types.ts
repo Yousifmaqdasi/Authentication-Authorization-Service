@@ -1,5 +1,13 @@
 import { Request } from "express";
 
 export interface AuthRequest extends Request{
-    userId?: number;
+  user?: {
+    id: number;
+    role: string;
+  }
+}
+
+export type Roles = {
+  admin: {can: string[]}
+  user: {can: string[]}
 }
