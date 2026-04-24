@@ -1,13 +1,15 @@
 import { Router } from "express";
 import { getMe, deleteMe, getUsers} from "../controllers/user.controller";
-import { verifyAccessToken } from "../middleware/auth.middleware";
-import { checkRoleMiddleware } from "../middleware/role.middleware";
+import { authMiddleware } from "../middleware/auth.middleware";
+import checkRole from "../middleware/role.middleware";
+import { getUser } from "../controllers/user.controller";
 
 const usersRouter = Router()
 
-usersRouter.get('/', verifyAccessToken, checkRoleMiddleware("admin"), getUsers)
-usersRouter.get('/me', verifyAccessToken, getMe)
-usersRouter.delete('/me', verifyAccessToken, deleteMe)
+usersRouter.get('/', authMiddleware, checkRole(["admin"]), getUsers)
+usersRouter.get('/:id', authMiddleware ,getUser)
+usersRouter.get('/me', authMiddleware, getMe)
+usersRouter.delete('/me', authMiddleware, deleteMe)
 
 
 export default usersRouter
