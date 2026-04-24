@@ -1,18 +1,20 @@
-import { Response, NextFunction } from "express"
-import { AuthRequest } from "../types/auth.types"
+import { Response, NextFunction } from "express";
+import { AuthRequest } from "../types/auth.types";
 
 
-export const checkRoleMiddleware = (role: string) => {
+const checkRole = (roles: string[]) => {
     return (req: AuthRequest, res: Response, next: NextFunction) => {
-        if (!req.user) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-        
-        if (req.user.role !== role) {
-            return res.status(403).json({ message: "Access Denied" });
-        }
+    const user = req.user;
 
-        next()
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    if (!user.role || !roles.includes(user.role)) {
+      return res.status(403).json({ message: "Access Denied" });
     }
-}
 
+    next();
+  };
+}
+  
+
+export default checkRole;
