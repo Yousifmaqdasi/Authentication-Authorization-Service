@@ -11,13 +11,10 @@ export const verifyAccessToken = (req: AuthRequest, res: Response, next: NextFun
     if(!secret) throw new Error('ACCESS_TOKEN_SECRET is not defined') 
 
     try {
-        const decodedToken = jwt.verify(token, secret) as {id: number, role: string}
+        const decoded = jwt.verify(token, secret) as {userId: number, role: string}
 
-        const userId = decodedToken.id
-        const userRole = decodedToken.role
-
-        req.user = {id: userId, role: userRole}
-
+        req.user = {id: decoded.userId, role: decoded.role}
+        
         next()
     } 
     catch (error) {
