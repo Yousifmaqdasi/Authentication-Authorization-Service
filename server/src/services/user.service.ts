@@ -2,44 +2,53 @@ import { eq } from "drizzle-orm";
 import { db } from "../config/db";
 import { usersTable } from "../models/users.schema";
 
-
 export const getMe = async (userId: number) => {
-
-    const user = await db.select({
-        id: usersTable.id,
-        name: usersTable.name,
-        email: usersTable.email
+  const user = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
     })
     .from(usersTable)
-    .where(eq(usersTable.id, userId))
+    .where(eq(usersTable.id, userId));
 
-    if(user.length === 0) return null
+  if (user.length === 0) return null;
 
-    return user[0]
-} 
-
+  return user[0];
+};
 
 export const deleteMe = async (userId: number) => {
-
-    const user = await db
+  const user = await db
     .delete(usersTable)
     .where(eq(usersTable.id, userId))
-    .returning({id: usersTable.id})
+    .returning({ id: usersTable.id });
 
-    if(user.length === 0) return null
+  if (user.length === 0) return null;
 
-    return user[0]
-}
-
+  return user[0];
+};
 
 export const getUsers = async () => {
+  const users = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
+    })
+    .from(usersTable);
 
-    const users = await db.select({
-        id: usersTable.id,
-        name: usersTable.name,
-        email: usersTable.email
+  return users;
+};
+
+export const getUser = async (userId: number) => {
+  const user = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
     })
     .from(usersTable)
+    .where(eq(usersTable.id, userId));
 
-    return users
-}
+  return user;
+};
