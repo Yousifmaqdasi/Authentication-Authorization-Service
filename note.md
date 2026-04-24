@@ -53,3 +53,7 @@
   - Only logged-in users can create
   - Only owner can edit/delete
   - Admin can manage everything
+
+
+## Create hashed password (in case to create new admin)
+node -e "import('bcrypt').then(b => b.hash('Enter password here', 10).then(console.log))"
