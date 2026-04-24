@@ -12,7 +12,7 @@ app.use(cors())
 app.use(cookieParser());
 
 app.get('/', (req, res) => {
-    res.json({message: 'Homepage'});
+    res.json({message: 'Home'});
 })
 
 app.use('/api/auth', authRouter);

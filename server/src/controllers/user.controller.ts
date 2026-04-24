@@ -1,7 +1,7 @@
 import { AuthRequest } from "../types/auth.types";
 import { Request, Response, NextFunction} from "express";
-import { clearAccessToken } from "../utils/clear.access.token";
-import { clearRefreshToken } from "../utils/clear.refresh.token";
+import { clearAccessToken } from "../utils/generate.access.token";
+import { clearRefreshToken } from "../utils/generate.refresh.token";
 import {
     getMe as getMeService , 
     deleteMe as deleteMeService, 

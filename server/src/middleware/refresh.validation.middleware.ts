@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express"
+import { Response, NextFunction } from "express"
 import jwt from 'jsonwebtoken'
 import { AuthRequest } from "../types/auth.types"
 
@@ -11,14 +11,12 @@ export const verifyRefreshToken = (req: AuthRequest, res: Response, next: NextFu
     if(!secret) throw new Error('REFRESH_TOKEN_SECRET is not defined') 
 
     try {
-        const decodedToken = jwt.verify(refreshToken, secret) as {userId: number}
+        const decoded = jwt.verify(refreshToken, secret) as {userId: number}
 
-        const userId = decodedToken.userId
+        const userId = decoded.userId
         if(!userId) return 
 
-        if(!req.user) return res.status(401).json({message: "Unauthorized"})
-        
-        req.user.id = userId
+        req.user = { id: userId }
 
         next()
     } 
