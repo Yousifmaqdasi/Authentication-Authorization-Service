@@ -1,11 +1,11 @@
 import { Request } from "express";
 
-export type Role = "admin" | "editor" | "user";
+export type Role = "admin" | "user" | "editor";
 
 export interface AuthRequest extends Request {
   user?: {
     id: number;
-    role?: Role;
+    role: Role;
   };
 }
 
