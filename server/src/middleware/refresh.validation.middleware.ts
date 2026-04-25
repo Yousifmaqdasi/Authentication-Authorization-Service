@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express"
 import jwt from 'jsonwebtoken'
 import { AuthRequest } from "../types/auth.types"
 
-export const verifyRefreshToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticateWithRefreshToken = (req: AuthRequest, res: Response, next: NextFunction) => {
 
     const refreshToken = req.cookies.refreshToken
     if(!refreshToken) return res.status(401).json({message: "Unauthorized! No refresh token provided"})
