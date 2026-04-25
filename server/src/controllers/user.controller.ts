@@ -3,44 +3,39 @@ import { Request, Response, NextFunction } from "express";
 import { clearAccessToken } from "../utils/generate.access.token";
 import { clearRefreshToken } from "../utils/generate.refresh.token";
 import {
-  getMe as getMeService,
-  deleteMe as deleteMeService,
   getUsers as getUsersService,
-  getUser as getUserByIdService,
+  getUser as getUserService,
+  deleteUser as deleteUserService,
 } from "../services/user.service";
 
-export const getMe = async (
+export const getCurrentUser = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    if (!req.user?.id) return next({ status: 401, message: "Unauthorized" });
+    const user = await getUserService(req.user!.id);
+    if (!user) return next({ status: 404, message: "User was notr found" });
 
-    const user = await getMeService(req.user.id);
-    if (!user) return next({ status: 404, message: "User was not found" });
-
-    res.status(200).json(user);
+    res.json(user);
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteMe = async (
+export const deleteCurrentUser = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    if (!req.user?.id) return next({ status: 401, message: "Unauthorized" });
-
-    const user = await deleteMeService(req.user?.id);
+    const user = await deleteUserService(req.user!.id);
     if (!user) return next({ status: 404, message: "User was not found" });
 
     clearAccessToken(res);
     clearRefreshToken(res);
 
-    res.status(204).json(user);
+    res.status(204).send();
   } catch (error) {
     next(error);
   }
@@ -59,26 +54,31 @@ export const getUsers = async (
   }
 };
 
-export const getUser = async (
+export const getUserById = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    if (!req.user?.id) return next({ status: 401, message: "Unauthorized" });
-
-    const id = Number(req.params.id)
-
-    const user = await getUserByIdService(id);
-    if (user.length === 0)
-      return next({ status: 404, message: "User not found" });
-
-    if(req.user.role !== "admin" && req.user.id !== id) {
-        return next({ status: 403, message: "Access denied" });
-    }
-
+    const user = await getUserService(Number(req.params.id));
+    if (!user) return next({ status: 404, message: "User not found" });
 
     res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUserById = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const user = await deleteUserService(Number(req.params.id));
+    if (!user) return next({ status: 404, message: "User not found" });
+
+    res.status(204).send()
   } catch (error) {
     next(error);
   }
