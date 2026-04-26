@@ -15,7 +15,7 @@ export const getCurrentUser = async (
 ) => {
   try {
     const user = await getUserService(req.user!.id);
-    if (!user) return next({ status: 404, message: "User was notr found" });
+    if (!user) return next({ status: 404, message: "User was not found" });
 
     res.json(user);
   } catch (error) {
@@ -60,7 +60,10 @@ export const getUserById = async (
   next: NextFunction,
 ) => {
   try {
-    const user = await getUserService(Number(req.params.id));
+    const id = Number(req.params.id)
+    if (isNaN(id)) return next({ status: 400, message: "Invalid id" });
+    
+    const user = await getUserService(id);
     if (!user) return next({ status: 404, message: "User not found" });
 
     res.status(200).json(user);
@@ -75,7 +78,10 @@ export const deleteUserById = async (
   next: NextFunction,
 ) => {
   try {
-    const user = await deleteUserService(Number(req.params.id));
+    const id = Number(req.params.id)
+    if (isNaN(id)) return next({ status: 400, message: "Invalid id" });
+    
+    const user = await deleteUserService(id);
     if (!user) return next({ status: 404, message: "User not found" });
 
     res.status(204).send()
