@@ -9,3 +9,9 @@ export const resetTokenTable = pgTable("reset_tokens", {
     expires_at: timestamp("expires_at", {withTimezone: true}).notNull(),
 })
 
+export const refreshTokenTable = pgTable("refresh_tokens", {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    hashed_token: text("token").notNull().unique(),
+    user_id: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+    expires_at: timestamp("expires_at").notNull()
+})
