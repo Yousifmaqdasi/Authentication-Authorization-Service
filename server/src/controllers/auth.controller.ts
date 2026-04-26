@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+
 import {
   registerUser,
   loginUser,
@@ -6,15 +7,21 @@ import {
   resetPassword as resetPasswordService,
   refresh as refreshService,
 } from "../services/auth.service";
-import { accessToken } from "../utils/generate.access.token";
-import { refreshToken } from "../utils/generate.refresh.token";
-import { clearAccessToken } from "../utils/generate.access.token";
-import { clearRefreshToken } from "../utils/generate.refresh.token";
-import { AuthRequest } from "../types/auth.types";
-import { validateRegisterForm } from "../validators/auth.schema";
-import { validateLoginForm } from "../validators/auth.schema";
-import { validateForgotPasswordInput } from "../validators/auth.schema";
-import { validateResetPasswordInput } from "../validators/auth.schema";
+import { accessToken, clearAccessToken } from "../utils/generate.access.token";
+
+import {
+  refreshToken,
+  clearRefreshToken,
+} from "../utils/generate.refresh.token";
+
+import { AuthRequest, Permission } from "../types/auth.types";
+
+import {
+  validateRegisterForm,
+  validateLoginForm,
+  validateForgotPasswordInput,
+  validateResetPasswordInput,
+} from "../validators/auth.schema";
 
 export const register = async (
   req: Request,
@@ -36,10 +43,10 @@ export const register = async (
     if (!result.user)
       return next({ status: 500, message: "Could not create user" });
 
-    const userRole = result.user.role;
+    const userPermissions: Permission[] = result.user.permissions;
 
-    accessToken(res, result.user.id, userRole);
-    refreshToken(res, result.user.id);
+    accessToken(res, result.user.id, userPermissions);
+    refreshToken(res, result.user.id, userPermissions);
 
     res.status(201).json(result.user);
   } catch (error) {
@@ -66,10 +73,10 @@ export const login = async (
 
     if (!result.id) return next({ status: 500, message: "Login failed" });
 
-    const userRole = result.role;
+    const userPermissions: Permission[] = result.permissions;
 
-    accessToken(res, result.id, userRole);
-    refreshToken(res, result.id);
+    accessToken(res, result.id, userPermissions);
+    refreshToken(res, result.id, userPermissions);
 
     res.status(200).json({ message: "Logged in successfully", id: result.id });
   } catch (error) {
@@ -97,11 +104,11 @@ export const refresh = async (
 
     if (result.error) return next({ status: 401, message: "Invalid token" });
 
-    if (!result.id || !result.role) {
+    if (!result.id || !result.permissions) {
       return next({ status: 404, message: "User not found" });
     }
 
-    accessToken(res, result.id, result.role);
+    accessToken(res, result.id, result.permissions);
 
     res.json({ message: "Access token refreshed successfully" });
   } catch (error) {

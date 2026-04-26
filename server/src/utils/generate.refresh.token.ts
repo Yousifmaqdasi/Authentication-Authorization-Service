@@ -1,9 +1,10 @@
 import { Response } from "express";
 import jwt from "jsonwebtoken";
+import { Permission } from "../types/auth.types";
 
-export const refreshToken = (res: Response, userId: number) => {
+export const refreshToken = (res: Response, userId: number, permissions: Permission[] ) => {
   const refreshToken = jwt.sign(
-    { userId: userId },
+    { userId: userId, permissions: permissions },
     process.env.REFRESH_TOKEN_SECRET!,
     { expiresIn: "7d" },
   );

@@ -1,28 +1,37 @@
-import { Response, NextFunction } from "express"
-import jwt from 'jsonwebtoken'
-import { AuthRequest } from "../types/auth.types"
-import { Role } from "../types/auth.types"
+import { Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { AuthRequest } from "../types/auth.types";
+import { Permission } from "../types/auth.types";
 
-export const authenticateWithRefreshToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticateWithRefreshToken = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken)
+    return next({
+      status: 401,
+      message: "Unauthorized! No refresh token provided",
+    });
 
-    const refreshToken = req.cookies.refreshToken
-    if(!refreshToken) return res.status(401).json({message: "Unauthorized! No refresh token provided"})
+  const secret = process.env.REFRESH_TOKEN_SECRET;
+  if (!secret) throw new Error("REFRESH_TOKEN_SECRET is not defined");
 
-    const secret = process.env.REFRESH_TOKEN_SECRET
-    if(!secret) throw new Error('REFRESH_TOKEN_SECRET is not defined') 
+  try {
+    const decoded = jwt.verify(refreshToken, secret) as {
+      userId: number;
+      permissions: Permission[];
+    };
 
-    try {
-        const decoded = jwt.verify(refreshToken, secret) as {userId: number, role: Role}
+    const userId = decoded.userId;
+    if (!userId) return next({ status: 401, message: "Invalid token" });
 
-        const userId = decoded.userId
-        if(!userId) return 
+    req.user = { id: userId, permissions: decoded.permissions };
+    console.log(decoded.permissions)
 
-        req.user = { id: userId, role: decoded.role}
-
-        next()
-    } 
-    catch (error) {
-        console.error("Authentication failed:", error); 
-        return res.status(401).json({error: 'Invalid or expired refresh token'})
-    }
-}
+    next();
+  } catch (error) {
+    return next({ status: 401, message: "Invalid or expired refresh token" });
+  }
+};

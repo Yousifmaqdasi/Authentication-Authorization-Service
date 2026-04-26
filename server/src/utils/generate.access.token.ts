@@ -1,9 +1,10 @@
 import { Response } from "express";
 import jwt from "jsonwebtoken";
+import { Permission } from "../types/auth.types";
 
-export const accessToken = (res: Response, userId: number, role: string) => {
+export const accessToken = (res: Response, userId: number, permissions: Permission[]) => {
   const accessToken = jwt.sign(
-    { userId: userId, role: role },
+    { userId: userId, permissions: permissions },
     process.env.ACCESS_TOKEN_SECRET!,
     { expiresIn: "15m" },
   );

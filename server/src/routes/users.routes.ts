@@ -7,16 +7,21 @@ import {
   deleteUserById,
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
-import checkRole from "../middleware/role.middleware";
+import requirePermission from "../middleware/role.middleware";
+import { PERMISSIONS } from "../config/permissions";
 
 const usersRouter = Router();
- 
+
 usersRouter.use(authMiddleware);
 
-usersRouter.get("/", checkRole(["admin"]), getUsers);
+// IMPORTANT: authMiddleware must always be applied before these routes
+// authMiddleware runs before these routes, so req.user is always defined.
+// Safe to use req.user!.id without checking for null.
+
+usersRouter.get("/", requirePermission(PERMISSIONS.USER_READ), getUsers);
 usersRouter.get("/me", getCurrentUser);
 usersRouter.delete("/me", deleteCurrentUser);
-usersRouter.get("/:id", checkRole(["admin"]), getUserById);
-usersRouter.delete("/:id", checkRole(["admin"]), deleteUserById);
+usersRouter.get("/:id", requirePermission(PERMISSIONS.USER_READ), getUserById);
+usersRouter.delete("/:id", requirePermission(PERMISSIONS.USER_DELETE), deleteUserById,);
 
 export default usersRouter;
