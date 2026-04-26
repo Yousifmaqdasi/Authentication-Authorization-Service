@@ -7,10 +7,13 @@ import {
   resetPassword as resetPasswordService,
   refresh as refreshService,
 } from "../services/auth.service";
-import { accessToken, clearAccessToken } from "../utils/generate.access.token";
+import {
+  createAccessToken,
+  clearAccessToken,
+} from "../utils/generate.access.token";
 
 import {
-  refreshToken,
+  createRefreshToken,
   clearRefreshToken,
 } from "../utils/generate.refresh.token";
 
@@ -45,8 +48,8 @@ export const register = async (
 
     const userPermissions: Permission[] = result.user.permissions;
 
-    accessToken(res, result.user.id, userPermissions);
-    refreshToken(res, result.user.id, userPermissions);
+    createAccessToken(res, result.user.id, userPermissions);
+    createRefreshToken(res, result.user.id, userPermissions);
 
     res.status(201).json(result.user);
   } catch (error) {
@@ -75,8 +78,8 @@ export const login = async (
 
     const userPermissions: Permission[] = result.permissions;
 
-    accessToken(res, result.id, userPermissions);
-    refreshToken(res, result.id, userPermissions);
+    createAccessToken(res, result.id, userPermissions);
+    createRefreshToken(res, result.id, userPermissions);
 
     res.status(200).json({ message: "Logged in successfully", id: result.id });
   } catch (error) {
@@ -108,7 +111,7 @@ export const refresh = async (
       return next({ status: 404, message: "User not found" });
     }
 
-    accessToken(res, result.id, result.permissions);
+    createAccessToken(res, result.id, result.permissions);
 
     res.json({ message: "Access token refreshed successfully" });
   } catch (error) {
