@@ -3,13 +3,8 @@ import { db } from "../config/db";
 import { usersTable } from "../models/users.schema";
 import { userFields } from "../drizzle/selects/user.select";
 
-
 export const getUsers = async () => {
-  const users = await db
-    .select(userFields)
-    .from(usersTable);
-
-  return users;
+  return db.select(userFields).from(usersTable);
 };
 
 export const getUser = async (userId: number) => {
@@ -23,10 +18,9 @@ export const getUser = async (userId: number) => {
 
 export const deleteUser = async (userId: number) => {
   const [user] = await db
-  .delete(usersTable)
-  .where(eq(usersTable.id, userId))
-  .returning({id: usersTable.id})
+    .delete(usersTable)
+    .where(eq(usersTable.id, userId))
+    .returning({ id: usersTable.id });
 
-  return user ?? null
+  return user ?? null;
 };
-

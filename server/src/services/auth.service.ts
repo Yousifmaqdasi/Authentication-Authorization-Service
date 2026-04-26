@@ -2,10 +2,10 @@ import { eq } from "drizzle-orm";
 import { db } from "../config/db";
 import { usersTable } from "../models/users.schema";
 import bcrypt from "bcrypt";
-import nodemailer from "nodemailer";
 import { resetTokenTable } from "../models/tokens.schema";
 import crypto from "crypto";
-import { ROLE_PERMISSIONS } from "../config/permissions";
+import { getPermissions } from "../utils/permissions";
+import { sendResetEmail } from "./email.service";
 
 export const registerUser = async (
   name: string,
@@ -33,8 +33,7 @@ export const registerUser = async (
 
   const user = newUser[0];
 
-  const permissions =
-    ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || [];
+  const permissions = getPermissions(user.role);
 
   return { user: { ...user, permissions } };
 };
@@ -56,8 +55,7 @@ export const loginUser = async (email: string, password: string) => {
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) return { error: "Invalid credentials" };
 
-  const permissions =
-    ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || [];
+  const permissions = getPermissions(user.role);
 
   return { id: user.id, permissions };
 };
@@ -74,8 +72,7 @@ export const refresh = async (userId: number) => {
   const user = userInfo[0];
   if (!user) return { error: "User not found" };
 
-  const permissions =
-    ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || [];
+  const permissions = getPermissions(user.role);
 
   return { id: user.id, permissions };
 };
@@ -112,24 +109,7 @@ export const forgotPassword = async (email: string) => {
       },
     });
 
-  const transporter = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
-  const mailOptions = {
-    from: "noreply@myapp.com",
-    to: email,
-    subject: "Password Reset",
-    text: `Click the following link to reset your password: https://yourfrontend.com/reset-password/${user.id}/${token}`,
-  };
-
-  await transporter.sendMail(mailOptions);
+  await sendResetEmail(email, user.id, token);
 };
 
 export const resetPassword = async (
