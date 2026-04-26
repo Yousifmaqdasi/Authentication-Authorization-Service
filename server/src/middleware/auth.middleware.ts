@@ -3,7 +3,7 @@ import { Response, NextFunction } from "express";
 import { AuthRequest } from "../types/auth.types";
 import type { Permission } from "../types/auth.types";
 
-export const authMiddleware = (
+export const verifyJwt = (
   req: AuthRequest,
   res: Response,
   next: NextFunction,

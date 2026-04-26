@@ -6,13 +6,13 @@ import {
   getUserById,
   deleteUserById,
 } from "../controllers/user.controller";
-import { authMiddleware } from "../middleware/auth.middleware";
+import { verifyJwt } from "../middleware/auth.middleware";
 import requirePermission from "../middleware/role.middleware";
 import { PERMISSIONS } from "../config/permissions";
 
 const usersRouter = Router();
 
-usersRouter.use(authMiddleware);
+usersRouter.use(verifyJwt);
 
 // IMPORTANT: authMiddleware must always be applied before these routes
 // authMiddleware runs before these routes, so req.user is always defined.

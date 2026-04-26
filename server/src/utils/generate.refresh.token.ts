@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { Permission } from "../types/auth.types";
 import { db } from "../config/db";
 import { refreshTokenTable } from "../models/tokens.schema";
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt";
 
 export const createRefreshToken = async (
   res: Response,
@@ -16,8 +16,9 @@ export const createRefreshToken = async (
     { expiresIn: "7d" },
   );
 
-  const hashedToken = await bcrypt.hash(refreshToken, 10)
+  const hashedToken = await bcrypt.hash(refreshToken, 10);
 
+  // LOGIC FOR ADDING REFRESH TOKEN TO DB
   await db.insert(refreshTokenTable).values({
     hashed_token: hashedToken,
     user_id: userId,
