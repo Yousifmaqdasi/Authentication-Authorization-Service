@@ -4,11 +4,13 @@ import usersRouter from './routes/users.routes';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { errorHandler } from './middleware/error.handler.middleware';
+import helmet from 'helmet';
 
 const app = express();
 
-app.use(express.json());
+app.use(helmet())
 app.use(cors())
+app.use(express.json());
 app.use(cookieParser());
 
 app.get('/', (req, res) => {
