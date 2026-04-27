@@ -8,7 +8,6 @@
 ## Security Improvements
 
 - Add rate limiting (login, forgot password)
-- Store refresh tokens in database
 - Add logout from all devices
 
 ## User System Improvements

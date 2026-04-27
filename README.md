@@ -13,6 +13,7 @@ Some features may be improved or extended.
 - User registration & login
 - JWT-based authentication
 - Access & refresh tokens (stored in **HTTP-only cookies**)
+- Refresh tokens stored securely in database
 - Token refresh flow
 - Secure logout
 - Forgot password & reset password flow
@@ -36,10 +37,11 @@ Some features may be improved or extended.
     - Access Token
     - Refresh Token
 - Tokens are stored in **HTTP-only cookies**
+- Refresh token is also stored securely in the database
 
 ### 2. Access Protected Routes
 
-- `authMiddleware`:
+- `verifyAccessToken`:
   - Reads access token from cookies
   - Verifies JWT
   - Attaches user `{ id, permissions }` to `req.user`
@@ -48,15 +50,14 @@ Some features may be improved or extended.
 
 - When access token expires:
   - Client calls `/auth/refresh`
-  - `authenticateWithRefreshToken` verifies refresh token
+  - `verifyRefreshToken` verifies refresh token
+  - Server validates refresh token against database
   - New access token is issued
-
-⚠️ **Important:**  
-Refresh tokens are **NOT stored in the database yet may be added in future improvements.**.
 
 ### 4. Logout
 
 - Clears both access & refresh cookies
+- Removes refresh token from database
 
 ---
 
@@ -85,15 +86,15 @@ Middleware:
 
 ```
 src/
-├── controllers/      # Route handlers (auth, users)
-├── services/         # Business logic
-├── routes/           # Express route definitions
-├── middleware/       # Auth, refresh, role checks
-├── validators/       # Input validation
-├── utils/            # Token generators, helpers
 ├── config/           # Permissions config
-├── db/               # Drizzle schema & config
+├── controllers/      # Route handlers (auth, users)
+├── drizzle/          # Drizzle schema & config
+├── middleware/       # Auth, refresh, role checks
+├── routes/           # Express route definitions
+├── services/         # Business logic
 ├── types/            # Type definitions
+├── utils/            # Token generators, helpers
+├── validators/       # Input validation
 ├── app.ts            # Express app setup
 └── index.ts          # Server entry point
 ```
@@ -117,7 +118,7 @@ src/
 
 ### User Routes (`/users`)
 
-> All routes are protected by `authMiddleware`
+> All routes are protected by `verifyAccessToken`
 
 | Method | Endpoint | Permission  | Description         |
 | ------ | -------- | ----------- | ------------------- |
@@ -148,13 +149,17 @@ src/
 - `created_at`
 - `expires_at`
 
-Used for secure password reset flow.
 
----
+### Refresh Tokens Table
+- `id`
+- `token` (unique, FK → users)
+- `user_id`
+- `expires_at`
 
 ## 🔒 Security Notes
 
 - JWT stored in **HTTP-only cookies**
+- Refresh tokens stored securely in database
 - Password reset tokens are **hashed in DB**
 - Input validation before processing
 - Protected routes require valid JWT
@@ -176,6 +181,11 @@ REFRESH_TOKEN_SECRET=your_refresh_secret
 
 ACCESS_TOKEN_EXPIRES_IN=15m
 REFRESH_TOKEN_EXPIRES_IN=7d
+
+PERMIT_TOKEN=secret_key
+
+SMTP_USER=secret_key
+SMTP_PASS=secret_key
 ```
 
 ---
@@ -212,7 +222,6 @@ npm start
 
 ## 📌 Future Improvements
 
-- Store refresh tokens in database
 - Email verification
 - Rate limiting & security improvements
 - Advanced role system
