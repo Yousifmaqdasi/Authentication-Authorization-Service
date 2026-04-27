@@ -6,16 +6,16 @@ import {
   getUserById,
   deleteUserById,
 } from "../controllers/user.controller";
-import { verifyJwt } from "../middleware/auth.middleware";
+import { verifyAccessToken } from "../middleware/accessToken.middleware";
 import requirePermission from "../middleware/role.middleware";
 import { PERMISSIONS } from "../config/permissions";
 
 const usersRouter = Router();
 
-usersRouter.use(verifyJwt);
+usersRouter.use(verifyAccessToken);
 
-// IMPORTANT: authMiddleware must always be applied before these routes
-// authMiddleware runs before these routes, so req.user is always defined.
+// IMPORTANT: accessToken middleware must always be applied before these routes
+// the middleware runs before these routes, so req.user is always defined.
 // Safe to use req.user!.id without checking for null.
 
 usersRouter.get("/", requirePermission(PERMISSIONS.USER_READ), getUsers);

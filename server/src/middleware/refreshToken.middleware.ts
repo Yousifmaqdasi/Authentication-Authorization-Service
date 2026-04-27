@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/auth.types";
 import { Permission } from "../types/auth.types";
 
-export const authenticateWithRefreshToken = (
+export const verifyRefreshToken = (
   req: AuthRequest,
   res: Response,
   next: NextFunction,

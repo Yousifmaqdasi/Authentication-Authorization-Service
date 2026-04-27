@@ -8,15 +8,15 @@ import {
   resetPassword,
 } from "../controllers/auth.controller";
 
-import { verifyJwt } from "../middleware/auth.middleware";
-import { authenticateWithRefreshToken } from "../middleware/refresh.validation.middleware";
+import { verifyAccessToken } from "../middleware/accessToken.middleware";
+import { verifyRefreshToken } from "../middleware/refreshToken.middleware";
 
 const authRouter = Router();
 
 authRouter.post("/register", register);
 authRouter.post("/login", login);
-authRouter.post("/logout", verifyJwt, logout);
-authRouter.post("/refresh", authenticateWithRefreshToken, refresh);
+authRouter.post("/logout", verifyAccessToken, logout);
+authRouter.post("/refresh", verifyRefreshToken, refresh);
 authRouter.post("/forgot-password", forgotPassword);
 authRouter.post("/reset-password/:userId/:token", resetPassword);
 
