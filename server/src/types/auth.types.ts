@@ -6,7 +6,7 @@ export type Permission = typeof PERMISSIONS [keyof typeof PERMISSIONS]
 export interface AuthRequest extends Request {
   user?: {
     id: number;
-    permissions: Permission[]
+    permissions?: Permission[]
   };
 }
 

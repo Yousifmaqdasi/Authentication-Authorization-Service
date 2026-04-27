@@ -50,7 +50,7 @@ export const register = async (
     const userPermissions: Permission[] = result.user.permissions;
 
     createAccessToken(res, result.user.id, userPermissions);
-    await createRefreshToken(res, result.user.id, userPermissions);
+    await createRefreshToken(res, result.user.id);
 
     res.status(201).json(result.user);
   } catch (error) {
@@ -80,7 +80,7 @@ export const login = async (
     const userPermissions: Permission[] = result.permissions;
 
     createAccessToken(res, result.id, userPermissions);
-    await createRefreshToken(res, result.id, userPermissions);
+    await createRefreshToken(res, result.id);
 
     res.status(200).json({ message: "Logged in successfully", id: result.id });
   } catch (error) {
@@ -112,7 +112,10 @@ export const refresh = async (
   try {
     const refreshToken = req.cookies.refreshToken;
 
-    const result = await refreshService(refreshToken);
+    const userId = req.user?.id;
+    if (!userId) return next({ status: 401, message: "Unauthorized" });
+
+    const result = await refreshService(refreshToken, userId);
 
     if (result.error) return next({ status: 401, message: "Invalid token" });
 
@@ -123,7 +126,7 @@ export const refresh = async (
     const userPermissions: Permission[] = result.permissions;
 
     createAccessToken(res, result.id, userPermissions);
-    await createRefreshToken(res, result.id, userPermissions);
+    await createRefreshToken(res, result.id);
 
     res.json({ message: "Access token refreshed successfully" });
   } catch (error) {

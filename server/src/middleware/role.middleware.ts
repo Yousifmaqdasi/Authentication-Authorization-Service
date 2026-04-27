@@ -1,15 +1,15 @@
 import { Response, NextFunction } from "express";
-import { AuthRequest } from "../types/auth.types";
-
-import { Permission } from "../types/auth.types";
+import { AuthRequest, Permission } from "../types/auth.types";
 
 function requirePermission(permission: Permission) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    const user = req.user;
+
+    if (!user) {
       return next({ status: 401, message: "Unauthorized" });
     }
 
-    if (!req.user.permissions.includes(permission)) {
+    if (!user.permissions || !user.permissions.includes(permission)) {
       return next({ status: 403, message: "Access denied" });
     }
 

@@ -1,23 +1,17 @@
 import { Response } from "express";
 import jwt from "jsonwebtoken";
-import { Permission } from "../types/auth.types";
 import { db } from "../config/db";
 import { refreshTokenTable } from "../models/tokens.schema";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 
-export const createRefreshToken = async (
-  res: Response,
-  userId: number,
-  permissions: Permission[],
-) => {
+export const createRefreshToken = async (res: Response, userId: number) => {
   const refreshToken = jwt.sign(
-    { userId: userId, permissions: permissions },
+    { userId: userId },
     process.env.REFRESH_TOKEN_SECRET!,
     { expiresIn: "7d" },
   );
 
-  // Changed to crypto instead of Bcrypt, might run into problems later, not sure.
   const hashedToken = crypto
     .createHash("sha256")
     .update(refreshToken)

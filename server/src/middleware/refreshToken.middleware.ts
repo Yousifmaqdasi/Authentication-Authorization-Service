@@ -1,7 +1,6 @@
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/auth.types";
-import { Permission } from "../types/auth.types";
 
 export const verifyRefreshToken = (
   req: AuthRequest,
@@ -21,14 +20,12 @@ export const verifyRefreshToken = (
   try {
     const decoded = jwt.verify(refreshToken, secret) as {
       userId: number;
-      permissions: Permission[];
     };
 
     const userId = decoded.userId;
     if (!userId) return next({ status: 401, message: "Invalid token" });
 
-    req.user = { id: userId, permissions: decoded.permissions };
-    console.log(decoded.permissions)
+    req.user = { id: userId };
 
     next();
   } catch (error) {
