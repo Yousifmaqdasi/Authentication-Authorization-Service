@@ -6,7 +6,7 @@ import {
   getUserById,
   deleteUserById,
 } from "../controllers/user.controller";
-import { verifyAccessToken } from "../middleware/accessToken.middleware";
+import { verifyAccessToken } from "../middleware/access.token.middleware";
 import requirePermission from "../middleware/role.middleware";
 import { PERMISSIONS } from "../config/permissions";
 

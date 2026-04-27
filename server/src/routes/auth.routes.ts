@@ -8,17 +8,18 @@ import {
   resetPassword,
 } from "../controllers/auth.controller";
 
-import { verifyAccessToken } from "../middleware/accessToken.middleware";
-import { verifyRefreshToken } from "../middleware/refreshToken.middleware";
+import { verifyAccessToken } from "../middleware/access.token.middleware";
+import { verifyRefreshToken } from "../middleware/refresh.token.middleware";
+import { authLimiter } from "../middleware/rate.limiter.middleware";
 
 const authRouter = Router();
 
-authRouter.post("/register", register);
-authRouter.post("/login", login);
+authRouter.post("/register", authLimiter, register);
+authRouter.post("/login", authLimiter, login);
 authRouter.post("/logout", verifyAccessToken, logout);
 authRouter.post("/refresh", verifyRefreshToken, refresh);
-authRouter.post("/forgot-password", forgotPassword);
-authRouter.post("/reset-password/:userId/:token", resetPassword);
+authRouter.post("/forgot-password", authLimiter, forgotPassword);
+authRouter.post("/reset-password/:userId/:token", authLimiter, resetPassword);
 
 export default authRouter;
 

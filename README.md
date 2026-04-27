@@ -149,8 +149,8 @@ src/
 - `created_at`
 - `expires_at`
 
-
 ### Refresh Tokens Table
+
 - `id`
 - `token` (unique, FK → users)
 - `user_id`
@@ -159,11 +159,18 @@ src/
 ## 🔒 Security Notes
 
 - JWT stored in **HTTP-only cookies**
-- Refresh tokens stored securely in database
+  Refresh tokens stored securely in database
+- **Refresh token rotation**:
+  - A new refresh token is issued on every refresh request
+  - The previous refresh token is deleted from the database
 - Password reset tokens are **hashed in DB**
 - Input validation before processing
 - Protected routes require valid JWT
 - Permission-based authorization
+- Helmet used to set secure HTTP headers
+- **Rate limiting applied**:
+  - General API rate limiting to prevent abuse
+  - Stricter limits on authentication routes (login, register, password reset) to mitigate brute-force attacks
 
 ---
 

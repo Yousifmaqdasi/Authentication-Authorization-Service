@@ -5,11 +5,6 @@
 - Add email verification flow (register → verify before login)
 - Block login if email is not verified
 
-## Security Improvements
-
-- Add rate limiting (login, forgot password)
-- Add logout from all devices
-
 ## User System Improvements
 
 - Add update profile route (`PATCH /users/me`)
