@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { Permission } from "../types/auth.types";
 import { db } from "../config/db";
 import { refreshTokenTable } from "../models/tokens.schema";
-import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { eq } from "drizzle-orm";
 
 export const createRefreshToken = async (
@@ -17,9 +17,15 @@ export const createRefreshToken = async (
     { expiresIn: "7d" },
   );
 
-  const hashedToken = await bcrypt.hash(refreshToken, 10);
+  // Changed to crypto instead of Bcrypt, might run into problems later, not sure.
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
 
-  await db.delete(refreshTokenTable).where(eq(refreshTokenTable.user_id, userId))
+  await db
+    .delete(refreshTokenTable)
+    .where(eq(refreshTokenTable.user_id, userId));
 
   await db.insert(refreshTokenTable).values({
     hashed_token: hashedToken,
