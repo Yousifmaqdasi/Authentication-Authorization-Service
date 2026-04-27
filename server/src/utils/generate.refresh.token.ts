@@ -4,6 +4,7 @@ import { Permission } from "../types/auth.types";
 import { db } from "../config/db";
 import { refreshTokenTable } from "../models/tokens.schema";
 import bcrypt from "bcrypt";
+import { eq } from "drizzle-orm";
 
 export const createRefreshToken = async (
   res: Response,
@@ -18,7 +19,8 @@ export const createRefreshToken = async (
 
   const hashedToken = await bcrypt.hash(refreshToken, 10);
 
-  // LOGIC FOR ADDING REFRESH TOKEN TO DB
+  await db.delete(refreshTokenTable).where(eq(refreshTokenTable.user_id, userId))
+
   await db.insert(refreshTokenTable).values({
     hashed_token: hashedToken,
     user_id: userId,

@@ -6,6 +6,7 @@ import {
   forgotPassword as forgotPasswordService,
   resetPassword as resetPasswordService,
   refresh as refreshService,
+  logout as logoutService,
 } from "../services/auth.service";
 import {
   createAccessToken,
@@ -87,11 +88,20 @@ export const login = async (
   }
 };
 
-export const logout = (req: Request, res: Response) => {
+export const logout = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   clearAccessToken(res);
   clearRefreshToken(res);
 
-  res.status(200).json({ message: "Logged out successfully" });
+  const userId = req.user?.id;
+  if (!userId) return next({ status: 401, message: "Unauthorized" });
+
+  await logoutService(userId);
+
+  res.json({ message: "Logged out successfully" });
 };
 
 export const refresh = async (
@@ -100,10 +110,9 @@ export const refresh = async (
   next: NextFunction,
 ) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) return next({ status: 401, message: "Unauthorized" });
+    const refreshToken = req.cookies.refreshToken;
 
-    const result = await refreshService(userId);
+    const result = await refreshService(refreshToken);
 
     if (result.error) return next({ status: 401, message: "Invalid token" });
 
@@ -111,9 +120,10 @@ export const refresh = async (
       return next({ status: 404, message: "User not found" });
     }
 
-    createAccessToken(res, result.id, result.permissions);
-    console.log(result.permissions)
-    console.log(result.id)
+    const userPermissions: Permission[] = result.permissions;
+
+    createAccessToken(res, result.id, userPermissions);
+    await createRefreshToken(res, result.id, userPermissions);
 
     res.json({ message: "Access token refreshed successfully" });
   } catch (error) {
@@ -167,7 +177,7 @@ export const resetPassword = async (
       return res.status(400).json({ message: result.error });
     }
 
-    res.status(200).json({ message: "Password reset successful" });
+    res.json({ message: "Password reset successful" });
   } catch (error) {
     return next(error);
   }

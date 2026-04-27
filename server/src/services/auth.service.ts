@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../config/db";
 import { usersTable } from "../models/users.schema";
 import bcrypt from "bcrypt";
-import { resetTokenTable } from "../models/tokens.schema";
+import { refreshTokenTable, resetTokenTable } from "../models/tokens.schema";
 import crypto from "crypto";
 import { getPermissions } from "../utils/permissions";
 import { sendResetEmail } from "./email.service";
@@ -60,14 +60,36 @@ export const loginUser = async (email: string, password: string) => {
   return { id: user.id, permissions };
 };
 
-export const refresh = async (userId: number) => {
+export const logout = async (userId: number) => {
+  await db
+    .delete(refreshTokenTable)
+    .where(eq(refreshTokenTable.user_id, userId));
+};
+
+export const refresh = async (refreshToken: string) => {
+  if (!refreshToken) return { error: "Invalid token" };
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+
+  const refreshTokenInDb = await db
+    .select()
+    .from(refreshTokenTable)
+    .where(eq(refreshTokenTable.hashed_token, hashedToken));
+
+  const token = refreshTokenInDb[0];
+  if (!token) return { error: "Invalid token" };
+
+  if (token.expires_at < new Date()) {
+    return { error: "Expired token" };
+  }
+
   const userInfo = await db
-    .select({
-      id: usersTable.id,
-      role: usersTable.role,
-    })
+    .select({ id: usersTable.id, role: usersTable.role })
     .from(usersTable)
-    .where(eq(usersTable.id, userId));
+    .where(eq(usersTable.id, token.user_id));
 
   const user = userInfo[0];
   if (!user) return { error: "User not found" };
