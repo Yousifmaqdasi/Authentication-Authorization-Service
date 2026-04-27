@@ -66,8 +66,8 @@ export const logout = async (userId: number) => {
     .where(eq(refreshTokenTable.user_id, userId));
 };
 
-export const refresh = async (refreshToken: string) => {
-  if (!refreshToken) return { error: "Invalid token" };
+export const refresh = async (refreshToken: string, userId: number) => {
+  if (!refreshToken || !userId) return { error: "Invalid token" };
 
   const hashedToken = crypto
     .createHash("sha256")
@@ -80,7 +80,7 @@ export const refresh = async (refreshToken: string) => {
     .where(eq(refreshTokenTable.hashed_token, hashedToken));
 
   const token = refreshTokenInDb[0];
-  if (!token) return { error: "Invalid token" };
+  if (!token || token.user_id !== userId) return { error: "Invalid token" };
 
   if (token.expires_at < new Date()) {
     return { error: "Expired token" };
@@ -98,6 +98,7 @@ export const refresh = async (refreshToken: string) => {
 
   return { id: user.id, permissions };
 };
+
 
 export const forgotPassword = async (email: string) => {
   const userCredentials = await db
