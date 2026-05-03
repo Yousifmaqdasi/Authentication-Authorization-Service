@@ -9,10 +9,12 @@ import {
 import { verifyAccessToken } from "../middleware/access.token.middleware";
 import requirePermission from "../middleware/role.middleware";
 import { PERMISSIONS } from "../config/permissions";
+import { requireVerified } from "../middleware/require.verified.middleware";
 
 const usersRouter = Router();
 
 usersRouter.use(verifyAccessToken);
+usersRouter.use(requireVerified)
 
 // IMPORTANT: accessToken middleware must always be applied before these routes
 // the middleware runs before these routes, so req.user is always defined.
