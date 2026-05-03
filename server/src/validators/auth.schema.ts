@@ -4,8 +4,8 @@ const registerSchema = z.object({
     name: z
     .string()
     .trim()
-    .min(2, 'Minimum 2 characters')
-    .max(255, 'Maximum 255 characters are allowed'),
+    .min(2, 'Name must be minimum 2 characters')
+    .max(255, 'Name can’t exceed 255 characters'),
 
     email: z
     .email()
@@ -14,7 +14,7 @@ const registerSchema = z.object({
     password: z
     .string()
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{10,}$/,
-    `Minimum ten characters, at least one uppercase letter, one lowercase letter and one number`)
+    `Password must be minimum ten characters, at least one uppercase letter, one lowercase letter and one number`)
 })
 
 const loginSchema = z.object({
@@ -37,7 +37,7 @@ const resetPasswordSchema = z.object({
     password: z
     .string()
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{10,}$/,
-    `Minimum ten characters, at least one uppercase letter, one lowercase letter and one number`)
+    `Password must be minimum ten characters, at least one uppercase letter, one lowercase letter and one number`)
 })
 
 
