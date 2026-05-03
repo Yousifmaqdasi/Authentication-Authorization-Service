@@ -7,6 +7,7 @@ import {
   resetPassword as resetPasswordService,
   refresh as refreshService,
   logout as logoutService,
+  verifyEmail as verifyEmailService,
 } from "../services/auth.service";
 import {
   createAccessToken,
@@ -19,6 +20,7 @@ import {
 } from "../utils/generate.refresh.token";
 
 import { AuthRequest, Permission } from "../types/auth.types";
+import { sendVerificationEmail } from "../services/email.service";
 
 import {
   validateRegisterForm,
@@ -26,6 +28,8 @@ import {
   validateForgotPasswordInput,
   validateResetPasswordInput,
 } from "../validators/auth.schema";
+
+import { getPermissions } from "../utils/permissions";
 
 export const register = async (
   req: Request,
@@ -35,7 +39,10 @@ export const register = async (
   try {
     const validatedResult = validateRegisterForm(req.body);
     if (!validatedResult.success)
-      return next({ status: 400, message: "Failed validation" });
+      return next({
+        status: 400,
+        message: validatedResult.error.issues[0].message,
+      });
 
     const { name, email, password } = validatedResult.data;
 
@@ -47,15 +54,39 @@ export const register = async (
     if (!result.user)
       return next({ status: 500, message: "Could not create user" });
 
-    const userPermissions: Permission[] = result.user.permissions;
+    await sendVerificationEmail(result.user.email, result.verificationToken);
 
-    createAccessToken(res, result.user.id, userPermissions);
-    await createRefreshToken(res, result.user.id);
-
-    res.status(201).json(result.user);
+    res.status(201).json({ message: "Please verify your email" });
   } catch (error) {
     next(error);
   }
+};
+
+export const verifyEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const result = await verifyEmailService(
+    req.query.verificationToken as string,
+  );
+
+  if (result.error === "Invalid token")
+    return next({ status: 400, message: "Invalid verification link" });
+
+  if (result.error === "Token expired") {
+    return next({ status: 400, message: "Token expired, request a new one" });
+  }
+
+  if (!result.user)
+    return next({ status: 500, message: "Verification failed" });
+
+  const permissions: Permission[] = getPermissions(result.user.role);
+
+  createAccessToken(res, result.user.id, permissions);
+  await createRefreshToken(res, result.user.id);
+
+  res.status(200).json({ message: "Email verified successfully" });
 };
 
 export const login = async (
@@ -66,23 +97,28 @@ export const login = async (
   try {
     const validatedResult = validateLoginForm(req.body);
     if (!validatedResult.success)
-      return next({ status: 400, message: "Invalid request data" });
+      return next({
+        status: 400,
+        message: validatedResult.error.issues[0].message,
+      });
 
     const { email, password } = validatedResult.data;
 
     const result = await loginUser(email, password);
 
-    if (result?.error === "Invalid credentials")
+    if (result.error)
       return next({ status: 401, message: "Invalid credentials" });
 
-    if (!result.id) return next({ status: 500, message: "Login failed" });
+    if (!result.user) return next({ status: 500, message: "Login failed" });
 
-    const userPermissions: Permission[] = result.permissions;
+    const permissions: Permission[] = getPermissions(result.user.role);
 
-    createAccessToken(res, result.id, userPermissions);
-    await createRefreshToken(res, result.id);
+    createAccessToken(res, result.user.id, permissions);
+    await createRefreshToken(res, result.user.id);
 
-    res.status(200).json({ message: "Logged in successfully", id: result.id });
+    res
+      .status(200)
+      .json({ message: "Logged in successfully", id: result.user.id });
   } catch (error) {
     next(error);
   }
@@ -119,14 +155,14 @@ export const refresh = async (
 
     if (result.error) return next({ status: 401, message: "Invalid token" });
 
-    if (!result.id || !result.permissions) {
+    if (!result.user) {
       return next({ status: 404, message: "User not found" });
     }
 
-    const userPermissions: Permission[] = result.permissions;
+    const permissions: Permission[] = getPermissions(result.user.role);
 
-    createAccessToken(res, result.id, userPermissions);
-    await createRefreshToken(res, result.id);
+    createAccessToken(res, result.user.id, permissions);
+    await createRefreshToken(res, result.user.id);
 
     res.json({ message: "Access token refreshed successfully" });
   } catch (error) {
@@ -142,7 +178,10 @@ export const forgotPassword = async (
   try {
     const validatedResult = validateForgotPasswordInput(req.body);
     if (!validatedResult.success)
-      return next({ status: 400, message: "Invalid request data" });
+      return next({
+        status: 400,
+        message: validatedResult.error.issues[0].message,
+      });
 
     const { email } = validatedResult.data;
 
@@ -164,7 +203,10 @@ export const resetPassword = async (
   try {
     const validatedResult = validateResetPasswordInput(req.body);
     if (!validatedResult.success)
-      return next({ status: 400, message: "Invalid request data" });
+      return next({
+        status: 400,
+        message: validatedResult.error.issues[0].message,
+      });
 
     const { userId, token } = req.params as { userId: string; token: string };
 

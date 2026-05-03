@@ -6,6 +6,7 @@ import {
   refresh,
   forgotPassword,
   resetPassword,
+  verifyEmail
 } from "../controllers/auth.controller";
 
 import { verifyAccessToken } from "../middleware/access.token.middleware";
@@ -15,6 +16,7 @@ import { authLimiter } from "../middleware/rate.limiter.middleware";
 const authRouter = Router();
 
 authRouter.post("/register", authLimiter, register);
+authRouter.get("/verify-email", verifyEmail);
 authRouter.post("/login", authLimiter, login);
 authRouter.post("/logout", verifyAccessToken, logout);
 authRouter.post("/refresh", verifyRefreshToken, refresh);
