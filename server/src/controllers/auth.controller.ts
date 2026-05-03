@@ -1,35 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-
-import {
-  registerUser,
-  loginUser,
-  forgotPassword as forgotPasswordService,
-  resetPassword as resetPasswordService,
-  refresh as refreshService,
-  logout as logoutService,
-  verifyEmail as verifyEmailService,
-} from "../services/auth.service";
-import {
-  createAccessToken,
-  clearAccessToken,
-} from "../utils/generate.access.token";
-
-import {
-  createRefreshToken,
-  clearRefreshToken,
-} from "../utils/generate.refresh.token";
-
-import { Permission } from "../types/auth.types";
+import * as authService from "../services/auth.service";
+import { clearAccessToken } from "../utils/generate.access.token";
+import { clearRefreshToken } from "../utils/generate.refresh.token";
 import { sendVerificationEmail } from "../services/email.service";
-
-import {
-  validateRegisterForm,
-  validateLoginForm,
-  validateForgotPasswordInput,
-  validateResetPasswordInput,
-} from "../validators/auth.schema";
-
-import { getPermissions } from "../utils/permissions";
+import * as authValidators from "../validators/auth.schema";
+import { handleValidationResult } from "../utils/validate.result";
+import { issueTokens } from "../utils/issueAuthTokens";
 
 export const register = async (
   req: Request,
@@ -37,19 +13,22 @@ export const register = async (
   next: NextFunction,
 ) => {
   try {
-    const validatedResult = validateRegisterForm(req.body);
-    if (!validatedResult.success)
+    const validated = handleValidationResult(
+      authValidators.validateRegisterForm(req.body),
+      next,
+    );
+    if (!validated) return;
+
+    const { name, email, password } = validated;
+
+    const result = await authService.register(name, email, password);
+
+    if (result.error) {
       return next({
-        status: 400,
-        message: validatedResult.error.issues[0].message,
+        status: 409,
+        message: result.error,
       });
-
-    const { name, email, password } = validatedResult.data;
-
-    const result = await registerUser(name, email, password);
-
-    if (result?.error === "User exists")
-      return next({ status: 409, message: "User already exists" });
+    }
 
     if (!result.user)
       return next({ status: 500, message: "Could not create user" });
@@ -67,27 +46,32 @@ export const verifyEmail = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const result = await verifyEmailService(
-    req.query.verificationToken as string,
-  );
+  try {
+    const token = req.query.verificationToken as string;
 
-  const user = result.user;
+    if (!token) {
+      return next({ status: 400, message: "Missing verification token" });
+    }
 
-  if (result.error === "Invalid token")
-    return next({ status: 400, message: "Invalid verification link" });
+    const result = await authService.verifyEmail(token);
 
-  if (result.error === "Token expired") {
-    return next({ status: 400, message: "Token expired, request a new one" });
+    const user = result.user;
+
+    if (result.error === "Invalid token")
+      return next({ status: 400, message: "Invalid verification link" });
+
+    if (result.error === "Token expired") {
+      return next({ status: 400, message: "Token expired, request a new one" });
+    }
+
+    if (!user) return next({ status: 500, message: "Verification failed" });
+
+    await issueTokens(res, user);
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    next(error);
   }
-
-  if (!user) return next({ status: 500, message: "Verification failed" });
-
-  const permissions: Permission[] = getPermissions(user.role);
-
-  createAccessToken(res, user.id, permissions, user.isVerified);
-  await createRefreshToken(res, user.id, user.isVerified);
-
-  res.status(200).json({ message: "Email verified successfully" });
 };
 
 export const login = async (
@@ -96,16 +80,15 @@ export const login = async (
   next: NextFunction,
 ) => {
   try {
-    const validatedResult = validateLoginForm(req.body);
-    if (!validatedResult.success)
-      return next({
-        status: 400,
-        message: validatedResult.error.issues[0].message,
-      });
+    const validated = handleValidationResult(
+      authValidators.validateLoginForm(req.body),
+      next,
+    );
+    if (!validated) return;
 
-    const { email, password } = validatedResult.data;
+    const { email, password } = validated;
 
-    const result = await loginUser(email, password);
+    const result = await authService.login(email, password);
 
     const user = result.user;
 
@@ -113,10 +96,7 @@ export const login = async (
 
     if (!user) return next({ status: 500, message: "Login failed" });
 
-    const permissions: Permission[] = getPermissions(result.user.role);
-
-    createAccessToken(res, user.id, permissions, user.isVerified);
-    await createRefreshToken(res, user.id, user.isVerified);
+    await issueTokens(res, user);
 
     res.status(200).json({ message: "Logged in successfully", id: user.id });
   } catch (error) {
@@ -129,30 +109,33 @@ export const logout = async (
   res: Response,
   next: NextFunction,
 ) => {
-  clearAccessToken(res);
-  clearRefreshToken(res);
+  try {
+    clearAccessToken(res);
+    clearRefreshToken(res);
 
-  const userId = req.user?.id
-  if (!userId) return next({ status: 401, message: "Unauthorized" });
+    const userId = req.user?.id;
+    if (!userId) return next({ status: 401, message: "Unauthorized" });
 
-  await logoutService(userId);
+    await authService.logout(userId);
 
-  res.json({ message: "Logged out successfully" });
+    res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const refresh = async (
   req: Request,
   res: Response,
   next: NextFunction,
-
 ) => {
   try {
     const refreshToken = req.cookies.refreshToken;
 
-    const userId = req.user?.id
+    const userId = req.user?.id;
     if (!userId) return next({ status: 401, message: "Unauthorized" });
 
-    const result = await refreshService(refreshToken, userId);
+    const result = await authService.refresh(refreshToken);
 
     const user = result.user;
 
@@ -162,10 +145,7 @@ export const refresh = async (
       return next({ status: 404, message: "User not found" });
     }
 
-    const permissions: Permission[] = getPermissions(user.role);
-
-    createAccessToken(res, user.id, permissions, user.isVerified);
-    await createRefreshToken(res, user.id, user.isVerified);
+    await issueTokens(res, user);
 
     res.json({ message: "Access token refreshed successfully" });
   } catch (error) {
@@ -179,16 +159,15 @@ export const forgotPassword = async (
   next: NextFunction,
 ) => {
   try {
-    const validatedResult = validateForgotPasswordInput(req.body);
-    if (!validatedResult.success)
-      return next({
-        status: 400,
-        message: validatedResult.error.issues[0].message,
-      });
+    const validated = handleValidationResult(
+      authValidators.validateForgotPasswordInput(req.body),
+      next,
+    );
+    if (!validated) return;
 
-    const { email } = validatedResult.data;
+    const { email } = validated;
 
-    await forgotPasswordService(email);
+    await authService.forgotPassword(email);
 
     return res
       .status(200)
@@ -204,12 +183,11 @@ export const resetPassword = async (
   next: NextFunction,
 ) => {
   try {
-    const validatedResult = validateResetPasswordInput(req.body);
-    if (!validatedResult.success)
-      return next({
-        status: 400,
-        message: validatedResult.error.issues[0].message,
-      });
+    const validated = handleValidationResult(
+      authValidators.validateResetPasswordInput(req.body),
+      next,
+    );
+    if (!validated) return;
 
     const { userId, token } = req.params as { userId: string; token: string };
 
@@ -217,12 +195,16 @@ export const resetPassword = async (
       return next({ status: 400, message: "Invalid request" });
     }
 
-    const { password } = validatedResult.data;
+    const { password } = validated;
 
-    const result = await resetPasswordService(Number(userId), token, password);
+    const result = await authService.resetPassword(
+      Number(userId),
+      token,
+      password,
+    );
 
     if (result?.error) {
-      return res.status(400).json({ message: result.error });
+      return next({ status: 400, message: result.error });
     }
 
     res.json({ message: "Password reset successful" });
