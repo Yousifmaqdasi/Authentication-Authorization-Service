@@ -4,7 +4,6 @@ import { usersTable } from "../models/users.schema";
 import bcrypt from "bcrypt";
 import { refreshTokenTable, resetTokenTable } from "../models/tokens.schema";
 import crypto from "crypto";
-import { getPermissions } from "../utils/permissions";
 import { sendResetEmail } from "./email.service";
 
 export const registerUser = async (
@@ -13,33 +12,63 @@ export const registerUser = async (
   password: string,
 ) => {
   const hashedPassword = await bcrypt.hash(password, 12);
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+  const verificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60);
 
-  const newUser = await db
+  const [newUser] = await db
     .insert(usersTable)
     .values({
       email: email,
       name: name,
       password: hashedPassword,
+      verificationToken: verificationToken,
+      verificationTokenExpires: verificationTokenExpires,
     })
     .onConflictDoNothing({ target: usersTable.email })
     .returning({
-      id: usersTable.id,
       name: usersTable.name,
       email: usersTable.email,
-      role: usersTable.role,
     });
 
-  if (newUser.length === 0) return { error: "User exists" };
+  if (!newUser) return { error: "User exists" };
 
-  const user = newUser[0];
+  return { user: { ...newUser }, verificationToken };
+};
 
-  const permissions = getPermissions(user.role);
+export const verifyEmail = async (verificationToken: string) => {
+  const [user] = await db
+    .select({
+      id: usersTable.id,
+      verificationTokenExpires: usersTable.verificationTokenExpires,
+      role: usersTable.role,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.verificationToken, verificationToken));
 
-  return { user: { ...user, permissions } };
+  if (!user) return { error: "Invalid token" };
+
+  if (
+    !user.verificationTokenExpires ||
+    user.verificationTokenExpires < new Date()
+  )
+    return {
+      error: "Token expired",
+    };
+
+  await db
+    .update(usersTable)
+    .set({
+      isVerified: true,
+      verificationToken: null,
+      verificationTokenExpires: null,
+    })
+    .where(eq(usersTable.id, user.id));
+
+  return { user: { id: user.id, role: user.role } };
 };
 
 export const loginUser = async (email: string, password: string) => {
-  const userCredentials = await db
+  const [user] = await db
     .select({
       id: usersTable.id,
       email: usersTable.email,
@@ -49,15 +78,12 @@ export const loginUser = async (email: string, password: string) => {
     .from(usersTable)
     .where(eq(usersTable.email, email));
 
-  const user = userCredentials[0];
   if (!user) return { error: "Invalid credentials" };
 
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) return { error: "Invalid credentials" };
 
-  const permissions = getPermissions(user.role);
-
-  return { id: user.id, permissions };
+  return { user: { id: user.id, role: user.role } };
 };
 
 export const logout = async (userId: number) => {
@@ -74,34 +100,29 @@ export const refresh = async (refreshToken: string, userId: number) => {
     .update(refreshToken)
     .digest("hex");
 
-  const refreshTokenInDb = await db
+  const [token] = await db
     .select()
     .from(refreshTokenTable)
     .where(eq(refreshTokenTable.hashed_token, hashedToken));
 
-  const token = refreshTokenInDb[0];
   if (!token || token.user_id !== userId) return { error: "Invalid token" };
 
   if (token.expires_at < new Date()) {
     return { error: "Expired token" };
   }
 
-  const userInfo = await db
+  const [user] = await db
     .select({ id: usersTable.id, role: usersTable.role })
     .from(usersTable)
     .where(eq(usersTable.id, token.user_id));
 
-  const user = userInfo[0];
   if (!user) return { error: "User not found" };
 
-  const permissions = getPermissions(user.role);
-
-  return { id: user.id, permissions };
+  return { user: { id: user.id, role: user.role } };
 };
 
-
 export const forgotPassword = async (email: string) => {
-  const userCredentials = await db
+  const [user] = await db
     .select({
       id: usersTable.id,
       email: usersTable.email,
@@ -109,7 +130,6 @@ export const forgotPassword = async (email: string) => {
     .from(usersTable)
     .where(eq(usersTable.email, email));
 
-  const user = userCredentials[0];
   if (!user) return;
 
   await db.delete(resetTokenTable).where(eq(resetTokenTable.user_id, user.id));
@@ -140,7 +160,7 @@ export const resetPassword = async (
   token: string,
   password: string,
 ) => {
-  const tokens = await db
+  const [tokenInDB] = await db
     .select({
       userId: resetTokenTable.user_id,
       hashedToken: resetTokenTable.hashed_token,
@@ -149,11 +169,11 @@ export const resetPassword = async (
     .from(resetTokenTable)
     .where(eq(resetTokenTable.user_id, userId));
 
-  if (tokens.length === 0) return { error: "Invalid token" };
+  if (!tokenInDB) return { error: "Invalid token" };
 
-  if (tokens[0].expiresAt < new Date()) return { error: "Invalid token" };
+  if (tokenInDB.expiresAt < new Date()) return { error: "Invalid token" };
 
-  const isMatch = await bcrypt.compare(token, tokens[0].hashedToken);
+  const isMatch = await bcrypt.compare(token, tokenInDB.hashedToken);
   if (!isMatch) return { error: "Invalid token" };
 
   const hashedPassword = await bcrypt.hash(password, 12);
