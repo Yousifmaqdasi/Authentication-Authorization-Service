@@ -31,6 +31,6 @@ export const sendVerificationEmail = async (
     from: "noreply@myapp.com",
     to: email,
     subject: "Email Verification",
-    text: `https://yourfrontend.com/verify-email?token=${verificationToken}`,
+    text: `https://yourfrontend.com/verify-email?verificationToken=${verificationToken}`,
   });
 };

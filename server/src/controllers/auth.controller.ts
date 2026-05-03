@@ -71,6 +71,8 @@ export const verifyEmail = async (
     req.query.verificationToken as string,
   );
 
+  const user = result.user;
+
   if (result.error === "Invalid token")
     return next({ status: 400, message: "Invalid verification link" });
 
@@ -78,13 +80,12 @@ export const verifyEmail = async (
     return next({ status: 400, message: "Token expired, request a new one" });
   }
 
-  if (!result.user)
-    return next({ status: 500, message: "Verification failed" });
+  if (!user) return next({ status: 500, message: "Verification failed" });
 
-  const permissions: Permission[] = getPermissions(result.user.role);
+  const permissions: Permission[] = getPermissions(user.role);
 
-  createAccessToken(res, result.user.id, permissions);
-  await createRefreshToken(res, result.user.id);
+  createAccessToken(res, user.id, permissions, user.isVerified);
+  await createRefreshToken(res, user.id, user.isVerified);
 
   res.status(200).json({ message: "Email verified successfully" });
 };
@@ -106,19 +107,18 @@ export const login = async (
 
     const result = await loginUser(email, password);
 
-    if (result.error)
-      return next({ status: 401, message: "Invalid credentials" });
+    const user = result.user;
 
-    if (!result.user) return next({ status: 500, message: "Login failed" });
+    if (result.error) return next({ status: 401, message: result.error });
+
+    if (!user) return next({ status: 500, message: "Login failed" });
 
     const permissions: Permission[] = getPermissions(result.user.role);
 
-    createAccessToken(res, result.user.id, permissions);
-    await createRefreshToken(res, result.user.id);
+    createAccessToken(res, user.id, permissions, user.isVerified);
+    await createRefreshToken(res, user.id, user.isVerified);
 
-    res
-      .status(200)
-      .json({ message: "Logged in successfully", id: result.user.id });
+    res.status(200).json({ message: "Logged in successfully", id: user.id });
   } catch (error) {
     next(error);
   }
@@ -153,16 +153,18 @@ export const refresh = async (
 
     const result = await refreshService(refreshToken, userId);
 
-    if (result.error) return next({ status: 401, message: "Invalid token" });
+    const user = result.user;
 
-    if (!result.user) {
+    if (result.error) return next({ status: 401, message: result.error });
+
+    if (!user) {
       return next({ status: 404, message: "User not found" });
     }
 
-    const permissions: Permission[] = getPermissions(result.user.role);
+    const permissions: Permission[] = getPermissions(user.role);
 
-    createAccessToken(res, result.user.id, permissions);
-    await createRefreshToken(res, result.user.id);
+    createAccessToken(res, user.id, permissions, user.isVerified);
+    await createRefreshToken(res, user.id, user.isVerified);
 
     res.json({ message: "Access token refreshed successfully" });
   } catch (error) {

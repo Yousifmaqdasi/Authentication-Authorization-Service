@@ -41,6 +41,7 @@ export const verifyEmail = async (verificationToken: string) => {
       id: usersTable.id,
       verificationTokenExpires: usersTable.verificationTokenExpires,
       role: usersTable.role,
+      isVerified: usersTable.isVerified,
     })
     .from(usersTable)
     .where(eq(usersTable.verificationToken, verificationToken));
@@ -64,7 +65,9 @@ export const verifyEmail = async (verificationToken: string) => {
     })
     .where(eq(usersTable.id, user.id));
 
-  return { user: { id: user.id, role: user.role } };
+  return {
+    user: { id: user.id, role: user.role, isVerified: true },
+  };
 };
 
 export const loginUser = async (email: string, password: string) => {
@@ -74,16 +77,21 @@ export const loginUser = async (email: string, password: string) => {
       email: usersTable.email,
       password: usersTable.password,
       role: usersTable.role,
+      isVerified: usersTable.isVerified,
     })
     .from(usersTable)
     .where(eq(usersTable.email, email));
 
-  if (!user) return { error: "Invalid credentials" };
+  if (!user) return { error: "Invalid email or password" };
+
+  if (!user.isVerified) return { error: "Invalid email or password" };
 
   const passwordMatch = await bcrypt.compare(password, user.password);
-  if (!passwordMatch) return { error: "Invalid credentials" };
+  if (!passwordMatch) return { error: "Invalid email or password" };
 
-  return { user: { id: user.id, role: user.role } };
+  return {
+    user: { id: user.id, role: user.role, isVerified: user.isVerified },
+  };
 };
 
 export const logout = async (userId: number) => {
@@ -112,13 +120,19 @@ export const refresh = async (refreshToken: string, userId: number) => {
   }
 
   const [user] = await db
-    .select({ id: usersTable.id, role: usersTable.role })
+    .select({
+      id: usersTable.id,
+      role: usersTable.role,
+      isVerified: usersTable.isVerified,
+    })
     .from(usersTable)
     .where(eq(usersTable.id, token.user_id));
 
   if (!user) return { error: "User not found" };
 
-  return { user: { id: user.id, role: user.role } };
+  return {
+    user: { id: user.id, role: user.role, isVerified: user.isVerified },
+  };
 };
 
 export const forgotPassword = async (email: string) => {
