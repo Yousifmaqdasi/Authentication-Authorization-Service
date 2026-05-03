@@ -22,3 +22,15 @@ export const sendResetEmail = async (
     text: `https://yourfrontend.com/reset-password/${userId}/${token}`,
   });
 };
+
+export const sendVerificationEmail = async (
+  email: string,
+  verificationToken: string,
+) => {
+  return transporter.sendMail({
+    from: "noreply@myapp.com",
+    to: email,
+    subject: "Email Verification",
+    text: `https://yourfrontend.com/verify-email?token=${verificationToken}`,
+  });
+};
