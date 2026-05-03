@@ -2,9 +2,14 @@ import { Response } from "express";
 import jwt from "jsonwebtoken";
 import { Permission } from "../types/auth.types";
 
-export const createAccessToken = (res: Response, userId: number, permissions: Permission[]) => {
+export const createAccessToken = (
+  res: Response,
+  userId: number,
+  permissions: Permission[],
+  isVerified: boolean,
+) => {
   const accessToken = jwt.sign(
-    { userId: userId, permissions: permissions },
+    { userId: userId, permissions: permissions, isVerified: isVerified },
     process.env.ACCESS_TOKEN_SECRET!,
     { expiresIn: "15m" },
   );

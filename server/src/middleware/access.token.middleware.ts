@@ -18,9 +18,10 @@ export const verifyAccessToken = (
     const decoded = jwt.verify(token, secret) as {
       userId: number;
       permissions: Permission[]
+      isVerified: boolean
     };
 
-    req.user = { id: decoded.userId, permissions: decoded.permissions };
+    req.user = { id: decoded.userId, permissions: decoded.permissions, isVerified: decoded.isVerified };
 
     next();
   } catch (error) {

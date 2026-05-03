@@ -5,9 +5,13 @@ import { refreshTokenTable } from "../models/tokens.schema";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 
-export const createRefreshToken = async (res: Response, userId: number) => {
+export const createRefreshToken = async (
+  res: Response,
+  userId: number,
+  isVerified: boolean,
+) => {
   const refreshToken = jwt.sign(
-    { userId: userId },
+    { userId: userId, isVerified: isVerified },
     process.env.REFRESH_TOKEN_SECRET!,
     { expiresIn: "7d" },
   );

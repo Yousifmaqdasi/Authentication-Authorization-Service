@@ -20,12 +20,10 @@ export const verifyRefreshToken = (
   try {
     const decoded = jwt.verify(refreshToken, secret) as {
       userId: number;
+      isVerified: boolean;
     };
 
-    const userId = decoded.userId;
-    if (!userId) return next({ status: 401, message: "Invalid token" });
-
-    req.user = { id: userId };
+    req.user = { id: decoded.userId, isVerified: decoded.isVerified };
 
     next();
   } catch (error) {
