@@ -5,71 +5,73 @@ import bcrypt from "bcrypt";
 import { refreshTokenTable, resetTokenTable } from "../models/tokens.schema";
 import crypto from "crypto";
 import { sendResetEmail } from "./email.service";
+import { hashToken } from "../utils/hash.token";
+import { getExpiry } from "../utils/get.expiry.date";
+import {
+  ERR_INVALID_CREDENTIALS,
+  ERR_INVALID_TOKEN,
+  ERR_EXPIRED_TOKEN,
+} from "../constants/errors";
+import { ONE_HOUR, FIFTEEN_MIN } from "../constants/time";
 
-export const registerUser = async (
+export const register = async (
   name: string,
   email: string,
   password: string,
 ) => {
+  const [existingUser] = await db
+    .select({
+      isVerified: usersTable.isVerified,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.email, email));
+
+  if (existingUser) {
+    return existingUser.isVerified
+      ? { error: "User already exists, please log in" }
+      : { error: "You need to verify your email" };
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const verificationToken = crypto.randomBytes(32).toString("hex");
-  const hashedVerificationToken = crypto
-    .createHash("sha256")
-    .update(verificationToken)
-    .digest("hex");
-  const verificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60);
+  const hashedVerificationToken = hashToken(verificationToken);
+  const expiresAt = getExpiry(ONE_HOUR);
 
   const [newUser] = await db
     .insert(usersTable)
     .values({
-      email: email,
-      name: name,
+      email,
+      name,
       password: hashedPassword,
       verificationToken: hashedVerificationToken,
-      verificationTokenExpires: verificationTokenExpires,
+      verificationTokenExpires: expiresAt,
     })
-    .onConflictDoNothing({ target: usersTable.email })
     .returning({
       name: usersTable.name,
       email: usersTable.email,
     });
 
-  // FOR POST /register ROUTE
-  // If user is not verified → tell them to verify their email
-  // If user is verified → tell them the account already exists
-  // First register → "Check your email for verification"
-  // Any later attempts (still unverified) → "You need to verify your email"
-  // If already verified → "User already exists, please log in"
-
-  if (!newUser) return { error: "User exists" };
-
-  return { user: { ...newUser }, verificationToken };
+  return { user: newUser, verificationToken };
 };
 
 export const verifyEmail = async (verificationToken: string) => {
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(verificationToken)
-    .digest("hex");
+  const hashedToken = hashToken(verificationToken);
 
   const [user] = await db
     .select({
       id: usersTable.id,
-      verificationTokenExpires: usersTable.verificationTokenExpires,
+      expiresAt: usersTable.verificationTokenExpires,
       role: usersTable.role,
       isVerified: usersTable.isVerified,
     })
     .from(usersTable)
     .where(eq(usersTable.verificationToken, hashedToken));
 
-  if (!user) return { error: "Invalid token" };
+  if (!user) return { error: ERR_INVALID_TOKEN };
 
-  if (
-    !user.verificationTokenExpires ||
-    user.verificationTokenExpires < new Date()
-  )
+  if (!user.expiresAt || user.expiresAt < new Date())
     return {
-      error: "Token expired",
+      error: ERR_EXPIRED_TOKEN,
     };
 
   await db
@@ -86,7 +88,7 @@ export const verifyEmail = async (verificationToken: string) => {
   };
 };
 
-export const loginUser = async (email: string, password: string) => {
+export const login = async (email: string, password: string) => {
   const [user] = await db
     .select({
       id: usersTable.id,
@@ -98,12 +100,10 @@ export const loginUser = async (email: string, password: string) => {
     .from(usersTable)
     .where(eq(usersTable.email, email));
 
-  if (!user) return { error: "Invalid email or password" };
-
-  if (!user.isVerified) return { error: "Invalid email or password" };
+  if (!user || !user.isVerified) return { error: ERR_INVALID_CREDENTIALS };
 
   const passwordMatch = await bcrypt.compare(password, user.password);
-  if (!passwordMatch) return { error: "Invalid email or password" };
+  if (!passwordMatch) return { error: ERR_INVALID_CREDENTIALS };
 
   return {
     user: { id: user.id, role: user.role, isVerified: user.isVerified },
@@ -116,23 +116,20 @@ export const logout = async (userId: number) => {
     .where(eq(refreshTokenTable.user_id, userId));
 };
 
-export const refresh = async (refreshToken: string, userId: number) => {
-  if (!refreshToken || !userId) return { error: "Invalid token" };
+export const refresh = async (refreshToken: string) => {
+  if (!refreshToken) return { error: ERR_INVALID_TOKEN };
 
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(refreshToken)
-    .digest("hex");
+  const hashedToken = hashToken(refreshToken);
 
   const [token] = await db
     .select()
     .from(refreshTokenTable)
     .where(eq(refreshTokenTable.hashed_token, hashedToken));
 
-  if (!token || token.user_id !== userId) return { error: "Invalid token" };
+  if (!token) return { error: ERR_INVALID_TOKEN };
 
   if (token.expires_at < new Date()) {
-    return { error: "Expired token" };
+    return { error: ERR_EXPIRED_TOKEN };
   }
 
   const [user] = await db
@@ -165,20 +162,21 @@ export const forgotPassword = async (email: string) => {
   await db.delete(resetTokenTable).where(eq(resetTokenTable.user_id, user.id));
 
   const token = crypto.randomBytes(32).toString("hex");
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  const hashedToken = hashToken(token);
+  const expiresAt = getExpiry(FIFTEEN_MIN);
 
   await db
     .insert(resetTokenTable)
     .values({
       user_id: user.id,
       hashed_token: hashedToken,
-      expires_at: new Date(Date.now() + 15 * 60 * 1000),
+      expires_at: expiresAt,
     })
     .onConflictDoUpdate({
       target: resetTokenTable.user_id,
       set: {
         hashed_token: hashedToken,
-        expires_at: new Date(Date.now() + 15 * 60 * 1000),
+        expires_at: expiresAt,
       },
     });
 
@@ -199,13 +197,15 @@ export const resetPassword = async (
     .from(resetTokenTable)
     .where(eq(resetTokenTable.user_id, userId));
 
-  if (!tokenInDB) return { error: "Invalid token" };
+  const hashedToken = hashToken(token);
 
-  if (tokenInDB.expiresAt < new Date()) return { error: "Invalid token" };
-
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-  if (hashedToken !== tokenInDB.hashedToken) return { error: "Invalid token" };
+  if (
+    !tokenInDB ||
+    tokenInDB.expiresAt < new Date() ||
+    hashedToken !== tokenInDB.hashedToken
+  ) {
+    return { error: ERR_INVALID_TOKEN };
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
