@@ -1,4 +1,3 @@
-import { AuthRequest } from "../types/auth.types";
 import { Request, Response, NextFunction } from "express";
 import { clearAccessToken } from "../utils/generate.access.token";
 import { clearRefreshToken } from "../utils/generate.refresh.token";
@@ -9,7 +8,7 @@ import {
 } from "../services/user.service";
 
 export const getCurrentUser = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -24,7 +23,7 @@ export const getCurrentUser = async (
 };
 
 export const deleteCurrentUser = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -55,7 +54,7 @@ export const getUsers = async (
 };
 
 export const getUserById = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -73,7 +72,7 @@ export const getUserById = async (
 };
 
 export const deleteUserById = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {

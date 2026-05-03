@@ -1,8 +1,8 @@
-import { Response, NextFunction } from "express";
-import { AuthRequest, Permission } from "../types/auth.types";
+import { Request, Response, NextFunction } from "express";
+import { Permission } from "../types/auth.types";
 
 function requirePermission(permission: Permission) {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
 
     if (!user) {

@@ -19,7 +19,7 @@ import {
   clearRefreshToken,
 } from "../utils/generate.refresh.token";
 
-import { AuthRequest, Permission } from "../types/auth.types";
+import { Permission } from "../types/auth.types";
 import { sendVerificationEmail } from "../services/email.service";
 
 import {
@@ -125,14 +125,14 @@ export const login = async (
 };
 
 export const logout = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   clearAccessToken(res);
   clearRefreshToken(res);
 
-  const userId = req.user?.id;
+  const userId = req.user?.id
   if (!userId) return next({ status: 401, message: "Unauthorized" });
 
   await logoutService(userId);
@@ -141,14 +141,15 @@ export const logout = async (
 };
 
 export const refresh = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
+
 ) => {
   try {
     const refreshToken = req.cookies.refreshToken;
 
-    const userId = req.user?.id;
+    const userId = req.user?.id
     if (!userId) return next({ status: 401, message: "Unauthorized" });
 
     const result = await refreshService(refreshToken, userId);

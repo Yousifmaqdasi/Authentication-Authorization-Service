@@ -1,8 +1,7 @@
-import { Response, NextFunction } from "express";
-import { AuthRequest } from "../types/auth.types";
+import { Request, Response, NextFunction } from "express";
 
 export function requireVerified(
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {

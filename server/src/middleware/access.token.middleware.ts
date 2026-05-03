@@ -1,10 +1,9 @@
 import jwt from "jsonwebtoken";
-import { Response, NextFunction } from "express";
-import { AuthRequest } from "../types/auth.types";
+import { Request, Response, NextFunction } from "express";
 import type { Permission } from "../types/auth.types";
 
 export const verifyAccessToken = (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -17,11 +16,15 @@ export const verifyAccessToken = (
   try {
     const decoded = jwt.verify(token, secret) as {
       userId: number;
-      permissions: Permission[]
-      isVerified: boolean
+      permissions: Permission[];
+      isVerified: boolean;
     };
 
-    req.user = { id: decoded.userId, permissions: decoded.permissions, isVerified: decoded.isVerified };
+    req.user = {
+      id: decoded.userId,
+      permissions: decoded.permissions,
+      isVerified: decoded.isVerified,
+    };
 
     next();
   } catch (error) {
@@ -29,5 +32,3 @@ export const verifyAccessToken = (
     return next({ status: 401, message: "Unauthorized" });
   }
 };
-
-

@@ -36,7 +36,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon --exec ts-node --files src/index.ts"
   },
   "keywords": [],
   "author": "",
