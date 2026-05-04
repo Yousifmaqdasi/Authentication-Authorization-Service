@@ -5,14 +5,11 @@ import { clearRefreshToken } from "../utils/generate.refresh.token";
 import { sendVerificationEmail } from "../services/email.service";
 import * as authValidators from "../validators/auth.schema";
 import { handleValidationResult } from "../utils/validate.result";
-import { issueTokens } from "../utils/issueAuthTokens";
+import { issueTokens } from "../utils/issue.auth.tokens";
+import asyncHandler from "../utils/async.handler";
 
-export const register = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
+export const register = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const validated = handleValidationResult(
       authValidators.validateRegisterForm(req.body),
       next,
@@ -36,17 +33,11 @@ export const register = async (
     await sendVerificationEmail(result.user.email, result.verificationToken);
 
     res.status(201).json({ message: "Please verify your email" });
-  } catch (error) {
-    next(error);
-  }
-};
+  },
+);
 
-export const verifyEmail = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
+export const verifyEmail = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const token = req.query.verificationToken as string;
 
     if (!token) {
@@ -55,8 +46,6 @@ export const verifyEmail = async (
 
     const result = await authService.verifyEmail(token);
 
-    const user = result.user;
-
     if (result.error === "Invalid token")
       return next({ status: 400, message: "Invalid verification link" });
 
@@ -64,22 +53,17 @@ export const verifyEmail = async (
       return next({ status: 400, message: "Token expired, request a new one" });
     }
 
-    if (!user) return next({ status: 500, message: "Verification failed" });
+    if (!result.user)
+      return next({ status: 500, message: "Verification failed" });
 
-    await issueTokens(res, user);
+    await issueTokens(res, result.user);
 
     res.status(200).json({ message: "Email verified successfully" });
-  } catch (error) {
-    next(error);
-  }
-};
+  },
+);
 
-export const login = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
+export const login = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const validated = handleValidationResult(
       authValidators.validateLoginForm(req.body),
       next,
@@ -90,75 +74,59 @@ export const login = async (
 
     const result = await authService.login(email, password);
 
-    const user = result.user;
-
     if (result.error) return next({ status: 401, message: result.error });
 
-    if (!user) return next({ status: 500, message: "Login failed" });
+    if (!result.user) return next({ status: 500, message: "Login failed" });
 
-    await issueTokens(res, user);
+    await issueTokens(res, result.user);
 
-    res.status(200).json({ message: "Logged in successfully", id: user.id });
-  } catch (error) {
-    next(error);
-  }
-};
+    res
+      .status(200)
+      .json({ message: "Logged in successfully", id: result.user.id });
+  },
+);
 
-export const logout = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    clearAccessToken(res);
-    clearRefreshToken(res);
-
+export const logout = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id;
     if (!userId) return next({ status: 401, message: "Unauthorized" });
 
     await authService.logout(userId);
 
-    res.json({ message: "Logged out successfully" });
-  } catch (error) {
-    next(error);
-  }
-};
+    clearAccessToken(res);
+    clearRefreshToken(res);
 
-export const refresh = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
+    res.json({ message: "Logged out successfully" });
+  },
+);
+
+export const refresh = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return next({ status: 401, message: "Missing refresh token" });
+    }
 
     const userId = req.user?.id;
     if (!userId) return next({ status: 401, message: "Unauthorized" });
 
     const result = await authService.refresh(refreshToken);
 
-    const user = result.user;
-
     if (result.error) return next({ status: 401, message: result.error });
 
-    if (!user) {
+    if (!result.user) {
       return next({ status: 404, message: "User not found" });
     }
 
-    await issueTokens(res, user);
+    await issueTokens(res, result.user);
 
     res.json({ message: "Access token refreshed successfully" });
-  } catch (error) {
-    next(error);
-  }
-};
+  },
+);
 
-export const forgotPassword = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
+export const forgotPassword = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const validated = handleValidationResult(
       authValidators.validateForgotPasswordInput(req.body),
       next,
@@ -172,17 +140,11 @@ export const forgotPassword = async (
     return res
       .status(200)
       .json({ message: "Check your email for password reset instructions" });
-  } catch (error) {
-    next(error);
-  }
-};
+  },
+);
 
-export const resetPassword = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
+export const resetPassword = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
     const validated = handleValidationResult(
       authValidators.validateResetPasswordInput(req.body),
       next,
@@ -208,7 +170,5 @@ export const resetPassword = async (
     }
 
     res.json({ message: "Password reset successful" });
-  } catch (error) {
-    return next(error);
-  }
-};
+  },
+);
