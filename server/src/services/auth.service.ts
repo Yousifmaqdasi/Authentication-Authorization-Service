@@ -51,7 +51,11 @@ export const register = async (
       email: usersTable.email,
     });
 
-  return { user: newUser, verificationToken };
+  return {
+    user: newUser,
+    verificationToken,
+    message: "User registered successfully. Please verify your email.",
+  };
 };
 
 export const verifyEmail = async (verificationToken: string) => {
@@ -84,7 +88,12 @@ export const verifyEmail = async (verificationToken: string) => {
     .where(eq(usersTable.id, user.id));
 
   return {
-    user: { id: user.id, role: user.role, isVerified: true },
+    user: {
+      id: user.id,
+      role: user.role,
+      isVerified: true,
+    },
+    message: "Email verified successfully",
   };
 };
 
@@ -106,7 +115,12 @@ export const login = async (email: string, password: string) => {
   if (!passwordMatch) return { error: ERR_INVALID_CREDENTIALS };
 
   return {
-    user: { id: user.id, role: user.role, isVerified: user.isVerified },
+    user: {
+      id: user.id,
+      role: user.role,
+      isVerified: user.isVerified,
+    },
+    message: "Login successful",
   };
 };
 
@@ -114,6 +128,10 @@ export const logout = async (userId: number) => {
   await db
     .delete(refreshTokenTable)
     .where(eq(refreshTokenTable.user_id, userId));
+
+  return {
+    message: "Logged out successfully",
+  };
 };
 
 export const refresh = async (refreshToken: string) => {
@@ -144,6 +162,7 @@ export const refresh = async (refreshToken: string) => {
   if (!user) return { error: "User not found" };
 
   return {
+    message: "Token refreshed successfully",
     user: { id: user.id, role: user.role, isVerified: user.isVerified },
   };
 };
@@ -157,7 +176,11 @@ export const forgotPassword = async (email: string) => {
     .from(usersTable)
     .where(eq(usersTable.email, email));
 
-  if (!user) return;
+  if (!user) {
+    return {
+      message: "If the email exists, a reset link has been sent",
+    };
+  }
 
   await db.delete(resetTokenTable).where(eq(resetTokenTable.user_id, user.id));
 
@@ -181,6 +204,10 @@ export const forgotPassword = async (email: string) => {
     });
 
   await sendResetEmail(email, user.id, token);
+
+  return {
+    message: "Password reset email sent",
+  };
 };
 
 export const resetPassword = async (
@@ -215,4 +242,8 @@ export const resetPassword = async (
     .where(eq(usersTable.id, userId));
 
   await db.delete(resetTokenTable).where(eq(resetTokenTable.user_id, userId));
+
+  return {
+    message: "Password reset successfully",
+  };
 };
