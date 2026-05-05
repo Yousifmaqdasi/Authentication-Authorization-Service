@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import * as authService from "../services/auth.service";
-import { clearAccessToken } from "../utils/generate.access.token";
-import { clearRefreshToken } from "../utils/generate.refresh.token";
+import { clearAccessToken } from "../utils/tokens/generate.access.token";
+import { clearRefreshToken } from "../utils/tokens/generate.refresh.token";
 import { sendVerificationEmail } from "../services/email.service";
 import * as authValidators from "../validators/auth.schema";
 import { handleValidationResult } from "../utils/validate.result";
-import { issueTokens } from "../utils/issue.auth.tokens";
+import { issueTokens } from "../utils/tokens/issue.auth.tokens";
 import asyncHandler from "../utils/async.handler";
 import { AppError } from "../utils/custom.error";
 import { ERR_INVALID_TOKEN, ERR_EXPIRED_TOKEN } from "../constants/errors";
+import { requireUser } from "../utils/require.user";
 
 export const register = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -93,13 +94,13 @@ export const login = asyncHandler(
 
 export const logout = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user?.id;
+    requireUser(req);
 
-    if (!userId) {
+    if (!req.user.id) {
       return next(new AppError("Unauthorized", 401));
     }
 
-    const result = await authService.logout(userId);
+    const result = await authService.logout(req.user.id);
 
     clearAccessToken(res);
     clearRefreshToken(res);
@@ -110,14 +111,15 @@ export const logout = asyncHandler(
 
 export const refresh = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    requireUser(req);
+
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
       return next(new AppError("Missing refresh token", 401));
     }
 
-    const userId = req.user?.id;
-    if (!userId) return next(new AppError("Unauthorized", 401));
+    if (!req.user.id) return next(new AppError("Unauthorized", 401));
 
     const result = await authService.refresh(refreshToken);
 

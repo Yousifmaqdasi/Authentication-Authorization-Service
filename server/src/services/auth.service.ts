@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import { refreshTokenTable, resetTokenTable } from "../models/tokens.schema";
 import crypto from "crypto";
 import { sendResetEmail } from "./email.service";
-import { hashToken } from "../utils/hash.token";
+import { hashToken } from "../utils/tokens/hash.token";
 import { getExpiry } from "../utils/get.expiry.date";
 import {
   ERR_INVALID_CREDENTIALS,
