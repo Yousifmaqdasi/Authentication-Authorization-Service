@@ -1,4 +1,4 @@
-import { getPermissions } from "./permissions";
+import { getPermissions } from "../get.permissions";
 import { createAccessToken } from "./generate.access.token";
 import { createRefreshToken } from "./generate.refresh.token";
 import { Response } from "express";

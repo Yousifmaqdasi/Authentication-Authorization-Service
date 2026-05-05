@@ -1,7 +1,7 @@
 import { Response } from "express";
 import jwt from "jsonwebtoken";
-import { db } from "../config/db";
-import { refreshTokenTable } from "../models/tokens.schema";
+import { db } from "../../config/db";
+import { refreshTokenTable } from "../../models/tokens.schema";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 

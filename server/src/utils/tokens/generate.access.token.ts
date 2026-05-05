@@ -1,6 +1,6 @@
 import { Response } from "express";
 import jwt from "jsonwebtoken";
-import { Permission } from "../types/auth.types";
+import { Permission } from "../../types/auth.types";
 
 export const createAccessToken = (
   res: Response,
