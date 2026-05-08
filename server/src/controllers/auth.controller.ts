@@ -62,7 +62,7 @@ export const verifyEmail = asyncHandler(
 
     await issueTokens(res, result.user);
 
-    res.status(200).json(result);
+    res.json(result);
   },
 );
 
@@ -88,7 +88,7 @@ export const login = asyncHandler(
 
     await issueTokens(res, result.user);
 
-    res.status(200).json(result);
+    res.json(result);
   },
 );
 
@@ -149,7 +149,7 @@ export const forgotPassword = asyncHandler(
 
     const result = await authService.forgotPassword(email);
 
-    return res.status(200).json(result);
+    return res.json(result);
   },
 );
 
