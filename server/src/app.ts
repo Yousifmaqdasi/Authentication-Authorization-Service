@@ -7,6 +7,8 @@ import { errorHandler } from "./middleware/error.handler.middleware";
 import helmet from "helmet";
 import { generalLimiter } from "./middleware/rate.limiter.middleware";
 import { AppError } from "./utils/custom.error";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./docs/swagger";
 
 const app = express();
 
@@ -20,6 +22,8 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(generalLimiter);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/", (req, res) => {
   res.json({ message: "Home" });
