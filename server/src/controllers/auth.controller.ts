@@ -33,7 +33,7 @@ export const register = asyncHandler(
 
     await sendVerificationEmail(result.user.email, result.verificationToken);
 
-    res.status(201).json(result);
+    res.status(201).json({user: result.user, message: result.message});
   },
 );
 
