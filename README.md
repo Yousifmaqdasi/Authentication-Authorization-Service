@@ -3,27 +3,31 @@
 A secure and structured backend authentication system built with **Node.js**, **Express**, **TypeScript**, and **Drizzle ORM**.  
 It includes full authentication flow, role-based access control, password reset, and email verification.
 
-⚠️ **Status: This project is currently under development.**  
-Some features may be improved or extended.
+## 🌐 Live Deployment
 
----
+Base API:
+https://authentication-authorization-service-production.up.railway.app/
+
+Swagger API Docs:
+https://authentication-authorization-service-production.up.railway.app/api-docs
 
 ## 🚀 Features
 
-- User registration & login
-- Email verification flow
-- JWT-based authentication
-- Access & refresh tokens (stored in **HTTP-only cookies**)
-- Refresh tokens stored securely in database
-- Token refresh flow
-- Secure logout
-- Forgot password & reset password flow
-- Role-based permission system
-- Protected routes with middleware
-- Drizzle ORM with PostgreSQL
-- Input validation layer
-- Clean architecture (controllers, services, middleware)
-- Centralized error handling using a custom `AppError` class
+- JWT authentication
+- Access & refresh token flow
+- HTTP-only cookie authentication
+- Refresh token rotation
+- Email verification
+- Forgot/reset password flow
+- Role-based access control (RBAC)
+- Permission middleware
+- Protected routes
+- Input validation
+- Centralized error handling
+- Swagger/OpenAPI documentation
+- PostgreSQL + Drizzle ORM
+- Clean modular architecture
+- Security hardening with Helmet & rate limiting
 
 ---
 
@@ -119,17 +123,20 @@ Middleware:
 
 ```
 src/
-├── config/
-├── controllers/
-├── drizzle/
-├── middleware/
-├── routes/
-├── services/
-├── types/
-├── utils/
-├── validators/
-├── app.ts
-└── index.ts
+├── config/          # env, db, app configuration
+├── constants/       # constants/enums
+├── controllers/     # request/response handling
+├── docs/            # swagger api docs
+├── drizzle/         # schema, migrations, db setup
+├── middleware/      # express middlewares
+├── models/          # database models/types
+├── routes/          # api route definitions
+├── services/        # business logic
+├── types/           # global/custom TypeScript types
+├── utils/           # helper functions
+├── validators/      # zod/validation schemas
+├── app.ts           # express app setup
+└── index.ts         # server entry point
 ```
 
 ---
@@ -200,18 +207,17 @@ src/
 
 ---
 
-## 🔒 Security Notes
+## 🔒 Security
 
-- JWT stored in **HTTP-only cookies**
-- Refresh tokens stored in DB (hashed)
-- Refresh token rotation enabled
-- Password reset tokens are hashed
-- Email verification tokens are hashed and expire
-- Protected routes require valid JWT
-- Verified users only can access protected routes
+- Access tokens stored in HTTP-only cookies
+- Refresh tokens hashed before database storage
+- Password reset tokens hashed and expiring
+- Email verification tokens hashed and expiring
+- Refresh token rotation
+- Protected route middleware
 - Permission-based authorization
-- Helmet for secure headers
-- Rate limiting applied (general + auth routes)
+- Helmet secure headers
+- Rate limiting for auth routes
 
 ---
 
@@ -235,6 +241,16 @@ SMTP_PASS=secret_key
 ```
 
 ---
+
+## 📘 API Documentation
+
+This project includes Swagger/OpenAPI documentation for all major endpoints.
+
+After starting the server, the API documentation is available at:
+
+```bash
+http://localhost:3000/api-docs
+```
 
 ## ▶️ Running the Project
 
