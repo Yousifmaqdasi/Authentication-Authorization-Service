@@ -26,7 +26,10 @@ app.use(generalLimiter);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/", (req, res) => {
-  res.json({ message: "Home" });
+  res.json({
+    service: "Authentication Service",
+    status: "running",
+  });
 });
 
 app.get("/health", (req, res) => {
