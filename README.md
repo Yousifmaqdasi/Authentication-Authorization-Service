@@ -18,6 +18,7 @@ https://authentication-authorization-service-production.up.railway.app/api-docs
 - HTTP-only cookie authentication
 - Refresh token rotation
 - Email verification
+- Resend email verification flow
 - Forgot/reset password flow
 - Role-based access control (RBAC)
 - Permission middleware
@@ -56,6 +57,16 @@ https://authentication-authorization-service-production.up.railway.app/api-docs
   - Checks expiration
   - Marks user as verified
 - Authentication tokens are issued after successful verification
+
+### 2.1 Resend Verification Email
+
+- User requests a new verification email
+- Server:
+  - Validates email
+  - Ensures user is unverified
+  - Generates new verification token
+  - Invalidates old token
+- A new verification email is sent
 
 ---
 
@@ -145,15 +156,16 @@ src/
 
 ### Auth Routes (`/auth`)
 
-| Method | Endpoint                         | Description     |
-| ------ | -------------------------------- | --------------- |
-| POST   | `/register`                      | Register user   |
-| GET    | `/verify-email`                  | Verify email    |
-| POST   | `/login`                         | Login           |
-| POST   | `/logout`                        | Logout          |
-| POST   | `/refresh`                       | Refresh token   |
-| POST   | `/forgot-password`               | Forgot password |
-| POST   | `/reset-password/:userId/:token` | Reset password  |
+| Method | Endpoint                         | Description               |
+| ------ | -------------------------------- | ------------------------- |
+| POST   | `/register`                      | Register user             |
+| GET    | `/verify-email`                  | Verify email              |
+| POST   | `/resend-verification-email`     | Resend verification email |
+| POST   | `/login`                         | Login                     |
+| POST   | `/logout`                        | Logout                    |
+| POST   | `/refresh`                       | Refresh token             |
+| POST   | `/forgot-password`               | Forgot password           |
+| POST   | `/reset-password/:userId/:token` | Reset password            |
 
 ---
 
@@ -272,14 +284,6 @@ npm start
 - PostgreSQL
 - JWT
 - Cookie-based auth
-
----
-
-## 📌 Future Improvements
-
-- Resend verification email
-- Advanced role system
-- More security hardening
 
 ---
 

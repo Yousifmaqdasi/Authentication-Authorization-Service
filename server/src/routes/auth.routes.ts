@@ -7,6 +7,7 @@ import {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  resendVerifyEmail,
 } from "../controllers/auth.controller";
 
 import { verifyAccessToken } from "../middleware/access.token.middleware";
@@ -75,6 +76,51 @@ authRouter.post("/register", authLimiter, register);
  *         description: Invalid or expired token
  */
 authRouter.get("/verify-email", verifyEmail);
+
+/**
+ * @swagger
+ * /api/auth/resend-verification-email:
+ *   post:
+ *     summary: Resend verification email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john@example.com
+ *     responses:
+ *       200:
+ *         description: Verification email resent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Verification email resent successfully
+ *       400:
+ *         description: Invalid request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid request
+ *       429:
+ *         description: Too many requests
+ */
+authRouter.post("/resend-verification-email", authLimiter, resendVerifyEmail);
 
 /**
  * @swagger

@@ -33,6 +33,7 @@ export const register = async (
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
+
   const verificationToken = crypto.randomBytes(32).toString("hex");
   const hashedVerificationToken = hashToken(verificationToken);
   const expiresAt = getExpiry(ONE_HOUR);
@@ -94,6 +95,41 @@ export const verifyEmail = async (verificationToken: string) => {
       isVerified: true,
     },
     message: "Email verified successfully",
+  };
+};
+
+export const resendVerifyEmail = async (email: string) => {
+  const [user] = await db
+    .select({
+      id: usersTable.id,
+      email: usersTable.email,
+      isVerified: usersTable.isVerified,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.email, email));
+
+  if (!user || user.isVerified) {
+    return { error: "Invalid request" };
+  }
+
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+  const hashedVerificationToken = hashToken(verificationToken);
+  const expiresAt = getExpiry(ONE_HOUR);
+
+  await db
+    .update(usersTable)
+    .set({
+      verificationToken: hashedVerificationToken,
+      verificationTokenExpires: expiresAt,
+    })
+    .where(eq(usersTable.id, user.id));
+
+  return {
+    user: {
+      email: user.email,
+      verificationToken,
+    },
+    message: "Verification email resent successfully",
   };
 };
 

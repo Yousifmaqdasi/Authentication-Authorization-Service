@@ -1,59 +1,61 @@
-import z from 'zod'
+import z from "zod";
 
 const registerSchema = z.object({
-    name: z
+  name: z
     .string()
     .trim()
-    .min(2, 'Name must be minimum 2 characters')
-    .max(255, 'Name can’t exceed 255 characters'),
+    .min(2, "Name must be minimum 2 characters")
+    .max(255, "Name can’t exceed 255 characters"),
 
-    email: z
-    .email()
-    .trim(),
+  email: z.email().trim(),
 
-    password: z
+  password: z
     .string()
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{10,}$/,
-    `Password must be minimum ten characters, at least one uppercase letter, one lowercase letter and one number`)
-})
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{10,}$/,
+      `Password must be minimum ten characters, at least one uppercase letter, one lowercase letter and one number`,
+    ),
+});
 
 const loginSchema = z.object({
-    email: z
-    .email()
-    .trim(),
+  email: z.email().trim(),
 
-    password: z
-    .string()
-    .min(1, 'Password is required')
-})
+  password: z.string().min(1, "Password is required"),
+});
 
 const forgotPasswordSchema = z.object({
-    email: z
-    .email()
-    .trim()
-})
+  email: z.email().trim(),
+});
 
 const resetPasswordSchema = z.object({
-    password: z
+  password: z
     .string()
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{10,}$/,
-    `Password must be minimum ten characters, at least one uppercase letter, one lowercase letter and one number`)
-})
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{10,}$/,
+      `Password must be minimum ten characters, at least one uppercase letter, one lowercase letter and one number`,
+    ),
+});
 
+const resendVerifyEmailSchema = z.object({
+  email: z.email(),
+});
 
 export const validateRegisterForm = (data: unknown) => {
-    return registerSchema.safeParse(data)
-}
+  return registerSchema.safeParse(data);
+};
 
 export const validateLoginForm = (data: unknown) => {
-    return loginSchema.safeParse(data)
-}
+  return loginSchema.safeParse(data);
+};
 
 export const validateForgotPasswordInput = (data: unknown) => {
-    return forgotPasswordSchema.safeParse(data)
-}
+  return forgotPasswordSchema.safeParse(data);
+};
 
 export const validateResetPasswordInput = (data: unknown) => {
-    return resetPasswordSchema.safeParse(data)
-}
+  return resetPasswordSchema.safeParse(data);
+};
 
+export const validateResendVerifyEmail = (data: unknown) => {
+  return resendVerifyEmailSchema.safeParse(data);
+};

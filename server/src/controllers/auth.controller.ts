@@ -33,7 +33,7 @@ export const register = asyncHandler(
 
     await sendVerificationEmail(result.user.email, result.verificationToken);
 
-    res.status(201).json({user: result.user, message: result.message});
+    res.status(201).json({ user: result.user, message: result.message });
   },
 );
 
@@ -63,6 +63,30 @@ export const verifyEmail = asyncHandler(
     await issueTokens(res, result.user);
 
     res.json(result);
+  },
+);
+
+export const resendVerifyEmail = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const validated = handleValidationResult(
+      authValidators.validateResendVerifyEmail(req.body),
+      next,
+    );
+
+    if (!validated) return;
+
+    const result = await authService.resendVerifyEmail(validated.email);
+
+    if (!result.user) {
+      return next(new AppError(result.error, 400));
+    }
+
+    await sendVerificationEmail(
+      result.user.email,
+      result.user.verificationToken,
+    );
+
+    res.json({ message: result.message });
   },
 );
 
